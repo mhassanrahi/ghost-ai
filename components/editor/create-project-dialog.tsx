@@ -30,6 +30,9 @@ export function CreateProjectDialog({
   isLoading,
 }: CreateProjectDialogProps) {
   const slug = toSlug(projectName)
+  const trimmed = projectName.trim()
+  const slugIsEmpty = !!trimmed && !slug
+  const hasStrippedChars = !!trimmed && !!slug && /[^a-z0-9\s-]/i.test(trimmed)
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
@@ -47,17 +50,27 @@ export function CreateProjectDialog({
             value={projectName}
             onChange={(e) => onProjectNameChange(e.target.value)}
           />
-          {projectName && (
+          {trimmed && (
             <p className="text-xs text-copy-muted">
               Slug:{" "}
-              <span className="font-mono text-copy-secondary">{slug}</span>
+              <span className="font-mono text-copy-secondary">{slug || "—"}</span>
+            </p>
+          )}
+          {slugIsEmpty && (
+            <p className="text-xs text-error">
+              Name must contain at least one letter or number.
+            </p>
+          )}
+          {hasStrippedChars && (
+            <p className="text-xs text-warning">
+              Special characters will be removed from the slug.
             </p>
           )}
         </div>
         <DialogFooter showCloseButton>
           <Button
             onClick={onConfirm}
-            disabled={!projectName.trim() || isLoading}
+            disabled={!trimmed || slugIsEmpty || isLoading}
           >
             Create
           </Button>
