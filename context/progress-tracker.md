@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- Complete
+- In Review (PR open)
 
 ## Current Goal
 
-- Authentication (Feature 03)
+- Feature 04: Project dialogs — PR open at feature/04-project-dialogs
 
 ## Completed
 
@@ -46,14 +46,23 @@ Update this file after every meaningful implementation change.
   - Created `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx` with two-panel layout (left panel hidden on mobile via `lg:` prefix)
   - Shared `components/auth/auth-layout.tsx` for both auth pages
   - Added `UserButton` to editor navbar right section
+- Implemented Feature 04: Project dialogs and sidebar actions (branch: feature/04-project-dialogs):
+  - `lib/mock-projects.ts` — `Project` interface + 3 mock entries (2 owned, 1 shared)
+  - `lib/slug.ts` — `toSlug` utility (lowercase, hyphenated, sanitized)
+  - `hooks/use-project-dialogs.ts` — single hook owns dialog state, form state, isLoading, mock CRUD
+  - `components/editor/create-project-dialog.tsx` — name input + live slug preview, disabled until name is non-empty
+  - `components/editor/rename-project-dialog.tsx` — prefilled input, autoFocus, Enter submits, current name in description
+  - `components/editor/delete-project-dialog.tsx` — destructive confirm only, no input
+  - `components/editor/project-sidebar.tsx` — ProjectItem with group-hover rename/delete (owned only), mobile backdrop scrim (z-[9], sm:hidden), shared projects use same ProjectItem (isOwned guard hides actions)
+  - `app/editor/page.tsx` — editor home screen (heading + description + New Project button), all three dialogs mounted at root, sidebar and dialogs wired to useProjectDialogs hook
 
 ## In Progress
 
-- None.
+- Feature 04 PR review (branch: feature/04-project-dialogs)
 
 ## Next Up
 
-- Feature 04 (check context/feature-specs/)
+- Feature 05 (check context/feature-specs/ after PR merges)
 
 ## Open Questions
 
