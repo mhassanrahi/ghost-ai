@@ -2,12 +2,10 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
-
 @theme inline {
     /* Typography */
     --font-heading: var(--font-sans);
-    --font-sans: var(--font-sans);
+    --font-sans: var(--font-geist-sans);
 
     /* Radius scale */
     --radius-sm: calc(var(--radius) * 0.6);
