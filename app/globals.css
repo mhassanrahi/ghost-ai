@@ -133,6 +133,10 @@
         color: var(--text-primary);
     }
 
+    input, textarea, select {
+        color: var(--text-primary);
+    }
+
     html {
         @apply font-sans;
     }
