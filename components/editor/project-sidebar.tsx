@@ -146,14 +146,12 @@ export function ProjectSidebar({
               ) : (
                 <div className="flex flex-col gap-0.5">
                   {sharedProjects.map((project) => (
-                    <div
+                    <ProjectItem
                       key={project.id}
-                      className="cursor-pointer rounded-xl px-3 py-2 hover:bg-elevated"
-                    >
-                      <span className="truncate text-sm text-copy-primary">
-                        {project.name}
-                      </span>
-                    </div>
+                      project={project}
+                      onRename={() => {}}
+                      onDelete={() => {}}
+                    />
                   ))}
                 </div>
               )}
