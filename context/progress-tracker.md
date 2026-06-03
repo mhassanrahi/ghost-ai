@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Editor chrome components (Feature 02)
+- Authentication (Feature 03)
 
 ## Completed
 
@@ -37,6 +37,15 @@ Update this file after every meaningful implementation change.
   - shadcn Tabs: "My Projects" | "Shared", both with empty placeholder state
   - Full-width "New Project" button with Plus icon at bottom
   - Accepts `isOpen: boolean` and `onClose: () => void` props
+- Implemented Clerk authentication (Feature 03):
+  - Installed `@clerk/ui`
+  - Added `NEXT_PUBLIC_CLERK_SIGN_IN_URL` and `NEXT_PUBLIC_CLERK_SIGN_UP_URL` to `.env.local`
+  - Created `proxy.ts` at project root with protected-first route protection (all routes protected except `/`, `/sign-in`, `/sign-up`)
+  - Wrapped root layout with `ClerkProvider` using `@clerk/ui/themes` dark theme and CSS variable overrides (no hardcoded colors)
+  - Updated `/` to redirect authenticated users to `/editor`, unauthenticated to `/sign-in`
+  - Created `app/sign-in/[[...sign-in]]/page.tsx` and `app/sign-up/[[...sign-up]]/page.tsx` with two-panel layout (left panel hidden on mobile via `lg:` prefix)
+  - Shared `components/auth/auth-layout.tsx` for both auth pages
+  - Added `UserButton` to editor navbar right section
 
 ## In Progress
 
@@ -44,7 +53,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Feature 03 (check context/feature-specs/)
+- Feature 04 (check context/feature-specs/)
 
 ## Open Questions
 
