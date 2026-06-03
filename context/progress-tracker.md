@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Design system and UI primitives (Feature 01)
+- Editor chrome components (Feature 02)
 
 ## Completed
 
@@ -22,6 +22,21 @@ Update this file after every meaningful implementation change.
   - shadcn semantic tokens (--background, --foreground, etc.) set to dark values in :root
   - Dark-only: no .dark class required
 - TypeScript (tsc --noEmit) and Next.js build (npm run build) both pass cleanly
+- Created `components/editor/editor-navbar.tsx`:
+  - Fixed-height (h-12) top navbar, z-20
+  - Left section: sidebar toggle with PanelLeftOpen / PanelLeftClose icon based on state
+  - Center and right sections present, empty for now
+  - `bg-surface` background, `border-surface-border` bottom border
+  - Accepts `isSidebarOpen: boolean` and `onToggleSidebar: () => void` props
+- Created `components/editor/project-sidebar.tsx`:
+  - Floating overlay sidebar (fixed position, z-10), does not push page content
+  - Slides in from left via `translate-x` transition (200ms ease-in-out)
+  - Starts at top-12 (below navbar), spans to bottom
+  - Width: w-72 (288px), `bg-surface/95 backdrop-blur-md` for depth
+  - Header: "Projects" title + X close button
+  - shadcn Tabs: "My Projects" | "Shared", both with empty placeholder state
+  - Full-width "New Project" button with Plus icon at bottom
+  - Accepts `isOpen: boolean` and `onClose: () => void` props
 
 ## In Progress
 
@@ -29,7 +44,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Feature 02 (check context/feature-specs/)
+- Feature 03 (check context/feature-specs/)
 
 ## Open Questions
 
