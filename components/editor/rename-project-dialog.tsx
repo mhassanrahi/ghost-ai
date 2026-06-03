@@ -32,12 +32,13 @@ export function RenameProjectDialog({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="rounded-3xl" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Rename Project</DialogTitle>
+          <DialogTitle className="text-copy-primary">Rename Project</DialogTitle>
           <DialogDescription>
             Renaming &quot;{currentName}&quot;.
           </DialogDescription>
         </DialogHeader>
         <Input
+          className="text-copy-primary"
           placeholder="Project name"
           value={projectName}
           onChange={(e) => onProjectNameChange(e.target.value)}

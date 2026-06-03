@@ -27,7 +27,7 @@ export function DeleteProjectDialog({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="rounded-3xl" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Delete Project</DialogTitle>
+          <DialogTitle className="text-copy-primary">Delete Project</DialogTitle>
           <DialogDescription>
             Are you sure you want to delete &quot;{projectName}&quot;? This
             action cannot be undone.

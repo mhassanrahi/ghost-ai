@@ -68,6 +68,13 @@
     --color-warning: var(--state-warning);
 }
 
+/* Non-layered: beats all @layer styles, fixes dark-only text inheritance in Base UI */
+input,
+textarea,
+select {
+    color: var(--text-primary);
+}
+
 @layer base {
     :root {
         /* shadcn semantic tokens — dark values (dark-only app) */
@@ -130,10 +137,6 @@
 
     body {
         background-color: var(--bg-base);
-        color: var(--text-primary);
-    }
-
-    input, textarea, select {
         color: var(--text-primary);
     }
 

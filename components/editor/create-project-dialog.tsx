@@ -35,13 +35,14 @@ export function CreateProjectDialog({
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <DialogContent className="rounded-3xl" showCloseButton={false}>
         <DialogHeader>
-          <DialogTitle>Create Project</DialogTitle>
+          <DialogTitle className="text-copy-primary">Create Project</DialogTitle>
           <DialogDescription>
             Give your architecture workspace a name.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
           <Input
+            className="text-copy-primary"
             placeholder="Project name"
             value={projectName}
             onChange={(e) => onProjectNameChange(e.target.value)}
