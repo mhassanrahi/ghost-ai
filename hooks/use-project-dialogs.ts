@@ -3,18 +3,9 @@
 import { useCallback, useState } from "react"
 
 import { type Project, MOCK_PROJECTS } from "@/lib/mock-projects"
+import { toSlug } from "@/lib/slug"
 
 type DialogType = "create" | "rename" | "delete" | null
-
-export function toSlug(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-}
 
 export function useProjectDialogs() {
   const [projects, setProjects] = useState<Project[]>(MOCK_PROJECTS)
@@ -50,6 +41,7 @@ export function useProjectDialogs() {
     const name = projectName.trim()
     if (!name) return
     setIsLoading(true)
+    // placeholder — synchronous with mock data; becomes meaningful when replaced with an API call
     const newProject: Project = {
       id: crypto.randomUUID(),
       name,
