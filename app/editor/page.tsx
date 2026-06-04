@@ -10,6 +10,7 @@ import { CreateProjectDialog } from "@/components/editor/create-project-dialog"
 import { RenameProjectDialog } from "@/components/editor/rename-project-dialog"
 import { DeleteProjectDialog } from "@/components/editor/delete-project-dialog"
 import { useProjectDialogs } from "@/hooks/use-project-dialogs"
+import { type Project } from "@/lib/projects"
 
 export default function EditorPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -38,10 +39,11 @@ export default function EditorPage() {
       <ProjectSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
-        projects={projects}
+        ownedProjects={projects.filter((p) => p.isOwned) as Project[]}
+        sharedProjects={projects.filter((p) => !p.isOwned) as Project[]}
         onCreateProject={openCreate}
-        onRenameProject={openRename}
-        onDeleteProject={openDelete}
+        onRenameProject={(p) => openRename(p as Parameters<typeof openRename>[0])}
+        onDeleteProject={(p) => openDelete(p as Parameters<typeof openDelete>[0])}
       />
 
       <main className="flex flex-1 flex-col items-center justify-center gap-4 pt-12">
