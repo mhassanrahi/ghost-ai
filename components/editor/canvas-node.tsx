@@ -36,8 +36,6 @@ export function CanvasNodeComponent({
   const colorEntry = NODE_COLORS.find((c) => c.fill === data.color) ?? DEFAULT_NODE_COLOR
   const borderColor = selected ? "#00c8d4" : "#2a2a30"
   const defaults = NODE_SHAPES[shape]
-  const w = width ?? defaults.width
-  const h = height ?? defaults.height
   const { minWidth, minHeight } = SHAPE_MIN[shape] ?? { minWidth: 40, minHeight: 30 }
 
   const [editing, setEditing] = useState(false)
@@ -96,18 +94,20 @@ export function CanvasNodeComponent({
   )
 
   const editingOverlay = editing ? (
-    <textarea
-      ref={textareaRef}
-      className="nodrag nopan absolute inset-0 w-full h-full bg-transparent border-none outline-none resize-none text-center text-xs z-10"
-      style={{ color: colorEntry.text, padding: "8px" }}
-      value={draft}
-      placeholder="Label..."
-      onChange={(e) => setDraft(e.target.value)}
-      onBlur={commitEdit}
-      onKeyDown={onTextareaKeyDown}
-      onMouseDown={(e) => e.stopPropagation()}
-      onClick={(e) => e.stopPropagation()}
-    />
+    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+      <textarea
+        ref={textareaRef}
+        className="nodrag nopan pointer-events-auto w-full bg-transparent border-none outline-none resize-none text-center text-xs leading-tight overflow-hidden"
+        style={{ color: colorEntry.text, padding: "0 8px" }}
+        value={draft}
+        placeholder="Label..."
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commitEdit}
+        onKeyDown={onTextareaKeyDown}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
   ) : null
 
   const labelEl = !editing ? (
@@ -187,8 +187,7 @@ export function CanvasNodeComponent({
     const pts = `${vw / 2},${pad} ${vw - pad},${vh / 2} ${vw / 2},${vh - pad} ${pad},${vh / 2}`
     return (
       <div
-        className="relative overflow-hidden"
-        style={{ width: w, height: h }}
+        className="relative overflow-hidden w-full h-full"
         onDoubleClick={onDoubleClick}
       >
         {resizer}
@@ -238,8 +237,7 @@ export function CanvasNodeComponent({
     ].join(" ")
     return (
       <div
-        className="relative overflow-hidden"
-        style={{ width: w, height: h }}
+        className="relative overflow-hidden w-full h-full"
         onDoubleClick={onDoubleClick}
       >
         {resizer}
@@ -284,8 +282,7 @@ export function CanvasNodeComponent({
     const botY = vh - pad - ry
     return (
       <div
-        className="relative overflow-hidden"
-        style={{ width: w, height: h }}
+        className="relative overflow-hidden w-full h-full"
         onDoubleClick={onDoubleClick}
       >
         {resizer}
