@@ -28,6 +28,10 @@ export async function POST(request: Request) {
 
   await liveblocks.getOrCreateRoom(room, { defaultAccesses: [] })
 
+  await liveblocks.updateRoom(room, {
+    usersAccesses: { [me.userId]: ["room:write"] },
+  })
+
   const { status, body } = await liveblocks.identifyUser(me.userId, {
     userInfo: { name, avatar, color },
   })
