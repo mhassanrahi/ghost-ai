@@ -2,13 +2,14 @@
 
 import { ReactFlow, Background, BackgroundVariant, MiniMap, ConnectionMode } from "@xyflow/react"
 import { useLiveblocksFlow, Cursors } from "@liveblocks/react-flow"
+import type { CanvasNode, CanvasEdge } from "@/types/canvas"
 import "@xyflow/react/dist/style.css"
 import "@liveblocks/react-ui/styles.css"
 import "@liveblocks/react-flow/styles.css"
 
 export function CanvasFlow() {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, onDelete } =
-    useLiveblocksFlow({
+    useLiveblocksFlow<CanvasNode, CanvasEdge>({
       suspense: true,
       nodes: { initial: [] },
       edges: { initial: [] },
