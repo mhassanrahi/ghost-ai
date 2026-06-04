@@ -4,11 +4,11 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-- In Review (PR open)
+- Active Development
 
 ## Current Goal
 
-- Feature 04: Project dialogs — PR open at feature/04-project-dialogs
+- Feature 06: Project API routes complete on branch prisma-integration
 
 ## Completed
 
@@ -55,14 +55,23 @@ Update this file after every meaningful implementation change.
   - `components/editor/delete-project-dialog.tsx` — destructive confirm only, no input
   - `components/editor/project-sidebar.tsx` — ProjectItem with group-hover rename/delete (owned only), mobile backdrop scrim (z-[9], sm:hidden), shared projects use same ProjectItem (isOwned guard hides actions)
   - `app/editor/page.tsx` — editor home screen (heading + description + New Project button), all three dialogs mounted at root, sidebar and dialogs wired to useProjectDialogs hook
+- Implemented Feature 05: Prisma integration (branch: prisma-integration):
+  - `prisma/models/project.prisma` — `Project` model (ownerId, name, optional description, ProjectStatus enum DRAFT/ARCHIVED, canvasJsonPath, timestamps, indexes on ownerId and createdAt) and `ProjectCollaborator` model (projectId cascade-delete relation, email, createdAt, unique on projectId+email, indexes on email and projectId+createdAt)
+  - Migration `20260603163344_init_projects` applied to Prisma Postgres
+  - Client generated to `app/generated/prisma/` via `prisma-client` generator
+  - `lib/prisma.ts` — cached singleton; branches on `DATABASE_URL`: `prisma+postgres://` uses `accelerateUrl` + `@prisma/extension-accelerate`, all other URLs use `@prisma/adapter-pg` with a `pg.Pool`; cached on `globalThis.prisma` in development
+- Implemented Feature 06: Project REST API routes (branch: prisma-integration):
+  - `app/api/projects/route.ts` — GET lists the authenticated user's projects ordered by createdAt desc; POST creates a project with name defaulting to "Untitled Project" if omitted/blank
+  - `app/api/projects/[projectId]/route.ts` — PATCH renames, DELETE removes; both verify ownerId matches authenticated userId before mutating
+  - 401 returned for unauthenticated requests on all four routes; 403 for non-owner mutations; 404 when project does not exist
 
 ## In Progress
 
-- Feature 04 PR review (branch: feature/04-project-dialogs)
+- None
 
 ## Next Up
 
-- Feature 05 (check context/feature-specs/ after PR merges)
+- Feature 07 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
