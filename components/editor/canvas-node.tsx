@@ -193,7 +193,6 @@ export function CanvasNodeComponent({
       >
         {resizer}
         {handles}
-        {editingOverlay}
         <svg
           className="absolute inset-0"
           width="100%"
@@ -222,6 +221,7 @@ export function CanvasNodeComponent({
             </text>
           )}
         </svg>
+        {editingOverlay}
       </div>
     )
   }
@@ -244,7 +244,6 @@ export function CanvasNodeComponent({
       >
         {resizer}
         {handles}
-        {editingOverlay}
         <svg
           className="absolute inset-0"
           width="100%"
@@ -273,6 +272,7 @@ export function CanvasNodeComponent({
             </text>
           )}
         </svg>
+        {editingOverlay}
       </div>
     )
   }
@@ -290,7 +290,6 @@ export function CanvasNodeComponent({
       >
         {resizer}
         {handles}
-        {editingOverlay}
         <svg
           className="absolute inset-0"
           width="100%"
@@ -359,6 +358,7 @@ export function CanvasNodeComponent({
             </text>
           )}
         </svg>
+        {editingOverlay}
       </div>
     )
   }
