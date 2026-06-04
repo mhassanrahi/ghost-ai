@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Feature 06: Project API routes complete on branch prisma-integration
+- Feature 11: Base canvas complete on branch feature/07-wire-editor-home
 
 ## Completed
 
@@ -92,13 +92,26 @@ Update this file after every meaningful implementation change.
   - `components/editor/workspace-shell.tsx` — added `isOwner` prop; mounts `useShareDialog` and `ShareDialog`
   - `app/editor/[roomId]/page.tsx` — passes `isOwner={project.isOwner}` to `WorkspaceShell`
 
+- Implemented Feature 10: Liveblocks realtime collaboration infrastructure (branch: feature/07-wire-editor-home):
+  - `liveblocks.config.ts` — updated Presence (cursor `{ x, y } | null`, `isThinking: boolean`) and UserMeta (`id`, `info.name`, `info.avatar`, `info.color`)
+  - `lib/liveblocks.ts` — cached `Liveblocks` node client singleton (dev-safe via `globalThis`); `userIdToColor(userId)` deterministically maps a user ID to one of 12 fixed palette colors via a simple hash
+  - `app/api/liveblocks-auth/route.ts` — `POST /api/liveblocks-auth`; requires Clerk auth (401 otherwise); reads `room` from request body and verifies access via `getProjectIfAccessible` (403 if denied); calls `getOrCreateRoom` to ensure the room exists; returns an ID-token session with `name`, `avatar`, and `color` attached as `userInfo`
+  - Installed `@liveblocks/node` (was missing from dependencies despite spec stating packages were pre-installed)
+  - Added `LIVEBLOCKS_SECRET_KEY=sk_` placeholder to `.env.local` — **must be replaced with actual key from Liveblocks dashboard**
+
+- Implemented Feature 11: Base canvas (branch: feature/07-wire-editor-home):
+  - `types/canvas.ts` — `NodeData` interface (label, color, shape) + `EdgeData` interface; `CanvasNode` and `CanvasEdge` type aliases using `@xyflow/react` Node/Edge generics
+  - `components/editor/canvas-flow.tsx` — client component calling `useLiveblocksFlow` (suspense mode, empty initial nodes/edges); renders `ReactFlow` with dot-pattern `Background`, `MiniMap`, `Cursors`, loose connection mode, and `fitView`
+  - `components/editor/canvas-wrapper.tsx` — client component mounting `LiveblocksProvider` (auth: `/api/liveblocks-auth`) + `RoomProvider` (room ID from prop, initial presence `cursor: null, isThinking: false`); wraps `CanvasFlow` in `ErrorBoundary` + `ClientSideSuspense` with loading and error fallback UI
+  - `components/editor/workspace-shell.tsx` — canvas placeholder replaced with `<CanvasWrapper roomId={project.id} />`
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 10 (check context/feature-specs/ for next spec)
+- Feature 12 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
