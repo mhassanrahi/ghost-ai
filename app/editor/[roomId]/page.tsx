@@ -22,18 +22,14 @@ export default async function WorkspacePage({ params }: Props) {
   ])
 
   const ownedProjects =
-    ownedResult.status === "fulfilled"
-      ? ownedResult.value
-      : []
-
+    ownedResult.status === "fulfilled" ? ownedResult.value : []
   const sharedProjects =
-    sharedResult.status === "fulfilled"
-      ? sharedResult.value
-      : []
+    sharedResult.status === "fulfilled" ? sharedResult.value : []
 
   return (
     <WorkspaceShell
       project={project}
+      isOwner={project.isOwner}
       ownedProjects={ownedProjects}
       sharedProjects={sharedProjects}
     />

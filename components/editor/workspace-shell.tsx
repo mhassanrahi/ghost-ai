@@ -3,8 +3,10 @@
 import { useState } from "react"
 
 import { type Project } from "@/lib/projects"
+import { useShareDialog } from "@/hooks/use-share-dialog"
 import { EditorNavbar } from "@/components/editor/editor-navbar"
 import { ProjectSidebar } from "@/components/editor/project-sidebar"
+import { ShareDialog } from "@/components/editor/share-dialog"
 import { CreateProjectDialog } from "@/components/editor/create-project-dialog"
 import { RenameProjectDialog } from "@/components/editor/rename-project-dialog"
 import { DeleteProjectDialog } from "@/components/editor/delete-project-dialog"
@@ -12,12 +14,14 @@ import { useProjectActions } from "@/hooks/use-project-actions"
 
 interface WorkspaceShellProps {
   project: { id: string; name: string }
+  isOwner: boolean
   ownedProjects: Project[]
   sharedProjects: Project[]
 }
 
 export function WorkspaceShell({
   project,
+  isOwner,
   ownedProjects,
   sharedProjects,
 }: WorkspaceShellProps) {
@@ -37,6 +41,7 @@ export function WorkspaceShell({
     handleRename,
     handleDelete,
   } = useProjectActions()
+  const shareDialog = useShareDialog(project.id)
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-base">
@@ -46,6 +51,7 @@ export function WorkspaceShell({
         projectName={project.name}
         isAiSidebarOpen={isAiSidebarOpen}
         onToggleAiSidebar={() => setIsAiSidebarOpen((p) => !p)}
+        onOpenShare={shareDialog.open}
       />
 
       <ProjectSidebar
@@ -78,6 +84,20 @@ export function WorkspaceShell({
         )}
       </div>
 
+      <ShareDialog
+        isOpen={shareDialog.isOpen}
+        onClose={shareDialog.close}
+        projectId={project.id}
+        isOwner={isOwner}
+        collaborators={shareDialog.collaborators}
+        inviteEmail={shareDialog.inviteEmail}
+        onInviteEmailChange={shareDialog.setInviteEmail}
+        onInvite={shareDialog.invite}
+        onRemove={shareDialog.remove}
+        onCopyLink={shareDialog.copyLink}
+        isCopied={shareDialog.isCopied}
+        isLoading={shareDialog.isLoading}
+      />
       <CreateProjectDialog
         isOpen={activeDialog === "create"}
         onClose={closeDialog}

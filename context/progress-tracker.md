@@ -82,13 +82,23 @@ Update this file after every meaningful implementation change.
   - `components/editor/workspace-shell.tsx` — client component owning sidebar/AI sidebar toggle state and all project dialogs; full-viewport layout with canvas placeholder and collapsible AI sidebar placeholder
   - `app/editor/[roomId]/page.tsx` — server component: unauthenticated users redirect to `/sign-in`; missing/inaccessible projects render `AccessDenied`; accessible projects render `WorkspaceShell` with server-fetched project lists
 
+- Implemented Feature 09: Share dialog (branch: feature/07-wire-editor-home):
+  - `lib/project-access.ts` — `getProjectIfAccessible` now returns `isOwner: boolean` alongside `id` and `name`
+  - `lib/clerk-users.ts` — `enrichEmailsWithClerk(emails)` looks up each email via Clerk Backend SDK and returns `{ displayName, imageUrl }` per email, with null fallback for unknown users
+  - `app/api/projects/[projectId]/collaborators/route.ts` — GET lists collaborators (accessible by owner and collaborators); POST invites by email (owner only, upsert to avoid duplicates); DELETE removes by email from request body (owner only)
+  - `hooks/use-share-dialog.ts` — manages open state, collaborator list, invite email, copy-link feedback, and all three mutations
+  - `components/editor/share-dialog.tsx` — dialog with copy-link row, invite form (owner only), scrollable collaborator list with inline avatars (Clerk image or initials fallback) and remove buttons (owner only)
+  - `components/editor/editor-navbar.tsx` — added `onOpenShare?` prop; Share button now calls it instead of being disabled
+  - `components/editor/workspace-shell.tsx` — added `isOwner` prop; mounts `useShareDialog` and `ShareDialog`
+  - `app/editor/[roomId]/page.tsx` — passes `isOwner={project.isOwner}` to `WorkspaceShell`
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 09 (check context/feature-specs/ for next spec)
+- Feature 10 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
