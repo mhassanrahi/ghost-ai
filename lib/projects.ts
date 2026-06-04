@@ -15,7 +15,6 @@ export async function getOwnedProjects(userId: string): Promise<Project[]> {
   return rows.map((p) => ({ ...p, isOwned: true }))
 }
 
-// Callers should pass `user?.primaryEmailAddress?.emailAddress ?? ""` as the email argument.
 export async function getSharedProjects(email: string): Promise<Project[]> {
   if (!email) return []
 
