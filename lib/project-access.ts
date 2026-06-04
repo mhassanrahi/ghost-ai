@@ -1,12 +1,13 @@
 import { auth, currentUser } from "@clerk/nextjs/server"
 import prisma from "@/lib/prisma"
 
-export async function getCurrentUser(): Promise<{ userId: string; email: string } | null> {
+export async function getCurrentUser(): Promise<{ userId: string; email: string; emails: string[] } | null> {
   const { userId } = await auth()
   if (!userId) return null
   const user = await currentUser()
   const email = user?.primaryEmailAddress?.emailAddress ?? ""
-  return { userId, email }
+  const emails = user?.emailAddresses?.map((e) => e.emailAddress) ?? []
+  return { userId, email, emails }
 }
 
 export async function getProjectIfAccessible(

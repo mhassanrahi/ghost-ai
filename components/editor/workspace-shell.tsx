@@ -11,6 +11,7 @@ import { CreateProjectDialog } from "@/components/editor/create-project-dialog"
 import { RenameProjectDialog } from "@/components/editor/rename-project-dialog"
 import { DeleteProjectDialog } from "@/components/editor/delete-project-dialog"
 import { useProjectActions } from "@/hooks/use-project-actions"
+import { CanvasWrapper } from "@/components/editor/canvas-wrapper"
 
 interface WorkspaceShellProps {
   project: { id: string; name: string }
@@ -66,8 +67,8 @@ export function WorkspaceShell({
       />
 
       <div className="flex flex-1 overflow-hidden pt-12">
-        <main className="flex flex-1 items-center justify-center bg-base">
-          <p className="text-sm text-copy-muted">Canvas coming soon</p>
+        <main className="relative flex-1 overflow-hidden">
+          <CanvasWrapper roomId={project.id} />
         </main>
 
         {isAiSidebarOpen && (

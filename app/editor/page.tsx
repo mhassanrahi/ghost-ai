@@ -9,11 +9,11 @@ export default async function EditorPage() {
   if (!userId) redirect("/sign-in")
 
   const user = await currentUser()
-  const email = user?.primaryEmailAddress?.emailAddress ?? ""
+  const emails = user?.emailAddresses?.map((e) => e.emailAddress) ?? []
 
   const [ownedProjects, sharedProjects] = await Promise.all([
     getOwnedProjects(userId),
-    getSharedProjects(email),
+    getSharedProjects(emails),
   ])
 
   return <EditorHome ownedProjects={ownedProjects} sharedProjects={sharedProjects} />

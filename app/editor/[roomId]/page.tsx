@@ -18,7 +18,7 @@ export default async function WorkspacePage({ params }: Props) {
 
   const [ownedResult, sharedResult] = await Promise.allSettled([
     getOwnedProjects(user.userId),
-    getSharedProjects(user.email),
+    getSharedProjects(user.emails),
   ])
 
   const ownedProjects =
