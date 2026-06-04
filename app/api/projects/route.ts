@@ -30,13 +30,19 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}))
+
   const name: string =
     typeof body?.name === 'string' && body.name.trim().length > 0
       ? body.name.trim()
       : 'Untitled Project'
 
+  const id: string | undefined =
+    typeof body?.id === 'string' && body.id.trim().length > 0
+      ? body.id.trim()
+      : undefined
+
   const project = await prisma.project.create({
-    data: { ownerId: userId!, name },
+    data: { ...(id ? { id } : {}), ownerId: userId!, name },
     select: {
       id: true,
       name: true,
