@@ -20,8 +20,9 @@ export async function enrichEmailsWithClerk(
   const byEmail = new Map<string, (typeof users)[number]>()
   for (const user of users) {
     for (const ea of user.emailAddresses) {
-      if (emails.includes(ea.emailAddress)) {
-        byEmail.set(ea.emailAddress, user)
+      const normalized = ea.emailAddress.toLowerCase()
+      if (emails.includes(normalized)) {
+        byEmail.set(normalized, user)
       }
     }
   }
