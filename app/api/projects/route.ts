@@ -29,14 +29,32 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const body = await request.json().catch(() => ({}))
+  const rawBody = await request.text()
+  let body: Record<string, unknown> = {}
+  if (rawBody.trim().length > 0) {
+    try {
+      body = JSON.parse(rawBody) as Record<string, unknown>
+    } catch {
+      return Response.json({ error: 'Invalid JSON body' }, { status: 400 })
+    }
+  }
+
   const name: string =
     typeof body?.name === 'string' && body.name.trim().length > 0
       ? body.name.trim()
       : 'Untitled Project'
 
+  const id: string | undefined =
+    typeof body?.id === 'string' && body.id.trim().length > 0
+      ? body.id.trim()
+      : undefined
+
+  if (id && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(id)) {
+    return Response.json({ error: 'Invalid project id' }, { status: 400 })
+  }
+
   const project = await prisma.project.create({
-    data: { ownerId: userId!, name },
+    data: { ...(id ? { id } : {}), ownerId: userId!, name },
     select: {
       id: true,
       name: true,

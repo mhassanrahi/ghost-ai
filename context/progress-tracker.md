@@ -65,13 +65,40 @@ Update this file after every meaningful implementation change.
   - `app/api/projects/[projectId]/route.ts` — PATCH renames, DELETE removes; both verify ownerId matches authenticated userId before mutating
   - 401 returned for unauthenticated requests on all four routes; 403 for non-owner mutations; 404 when project does not exist
 
+- Implemented Feature 07: Wire editor home to real project API (branch: feature/07-wire-editor-home):
+  - `lib/projects.ts` — `Project` interface + `getOwnedProjects(userId)` + `getSharedProjects(email)` Prisma helpers
+  - `app/api/projects/route.ts` — POST handler now accepts an optional client-supplied `id` to keep project DB ID and Liveblocks room ID aligned
+  - `hooks/use-project-actions.ts` — replaces mock `useProjectDialogs`; manages dialog state and calls real `POST/PATCH/DELETE /api/projects` endpoints; create generates `slug-suffix` room ID and navigates to new workspace; rename refreshes; delete redirects to `/editor` if active project else refreshes
+  - `components/editor/project-sidebar.tsx` — updated to accept `ownedProjects`/`sharedProjects` props directly, imports `Project` from `lib/projects`
+  - `components/editor/editor-home.tsx` — new client component owning sidebar toggle state + all dialogs wired to `useProjectActions`
+  - `app/editor/page.tsx` — converted to server component: fetches owned and shared projects server-side via Prisma, renders `<EditorHome>`
+  - Deleted `hooks/use-project-dialogs.ts` and `lib/mock-projects.ts` (replaced by real data)
+
+- Implemented Feature 08: Editor workspace shell (branch: feature/07-wire-editor-home):
+  - `lib/project-access.ts` — `getCurrentUser()` returns `{ userId, email }` from Clerk; `getProjectIfAccessible(projectId, userId, email)` returns `{ id, name }` if the user is owner or collaborator, null otherwise
+  - `components/editor/access-denied.tsx` — centered layout with Lock icon, short message, and "Back to projects" link to `/editor`
+  - `components/editor/project-sidebar.tsx` — added `activeRoomId?: string` prop; active project highlighted with `bg-elevated`
+  - `components/editor/editor-navbar.tsx` — added optional `projectName`, `isAiSidebarOpen`, `onToggleAiSidebar` props; workspace view shows project name in center and disabled Share + AI sidebar toggle in right section
+  - `components/editor/workspace-shell.tsx` — client component owning sidebar/AI sidebar toggle state and all project dialogs; full-viewport layout with canvas placeholder and collapsible AI sidebar placeholder
+  - `app/editor/[roomId]/page.tsx` — server component: unauthenticated users redirect to `/sign-in`; missing/inaccessible projects render `AccessDenied`; accessible projects render `WorkspaceShell` with server-fetched project lists
+
+- Implemented Feature 09: Share dialog (branch: feature/07-wire-editor-home):
+  - `lib/project-access.ts` — `getProjectIfAccessible` now returns `isOwner: boolean` alongside `id` and `name`
+  - `lib/clerk-users.ts` — `enrichEmailsWithClerk(emails)` looks up each email via Clerk Backend SDK and returns `{ displayName, imageUrl }` per email, with null fallback for unknown users
+  - `app/api/projects/[projectId]/collaborators/route.ts` — GET lists collaborators (accessible by owner and collaborators); POST invites by email (owner only, upsert to avoid duplicates); DELETE removes by email from request body (owner only)
+  - `hooks/use-share-dialog.ts` — manages open state, collaborator list, invite email, copy-link feedback, and all three mutations
+  - `components/editor/share-dialog.tsx` — dialog with copy-link row, invite form (owner only), scrollable collaborator list with inline avatars (Clerk image or initials fallback) and remove buttons (owner only)
+  - `components/editor/editor-navbar.tsx` — added `onOpenShare?` prop; Share button now calls it instead of being disabled
+  - `components/editor/workspace-shell.tsx` — added `isOwner` prop; mounts `useShareDialog` and `ShareDialog`
+  - `app/editor/[roomId]/page.tsx` — passes `isOwner={project.isOwner}` to `WorkspaceShell`
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 07 (check context/feature-specs/ for next spec)
+- Feature 10 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 

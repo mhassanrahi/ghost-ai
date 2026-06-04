@@ -1,21 +1,30 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Pencil, Plus, Trash2, X } from "lucide-react"
 
-import { type Project } from "@/lib/mock-projects"
+import { type Project } from "@/lib/projects"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 interface ProjectItemProps {
   project: Project
+  isActive: boolean
   onRename: () => void
   onDelete: () => void
 }
 
-function ProjectItem({ project, onRename, onDelete }: ProjectItemProps) {
+function ProjectItem({ project, isActive, onRename, onDelete }: ProjectItemProps) {
+  const router = useRouter()
   return (
-    <div className="group relative flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 hover:bg-elevated">
+    <div
+      className={cn(
+        "group relative flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 hover:bg-elevated",
+        isActive && "bg-elevated"
+      )}
+      onClick={() => router.push(`/editor/${project.id}`)}
+    >
       <span className="flex-1 truncate text-sm text-copy-primary">
         {project.name}
       </span>
@@ -52,7 +61,9 @@ function ProjectItem({ project, onRename, onDelete }: ProjectItemProps) {
 interface ProjectSidebarProps {
   isOpen: boolean
   onClose: () => void
-  projects: Project[]
+  ownedProjects: Project[]
+  sharedProjects: Project[]
+  activeRoomId?: string
   onCreateProject: () => void
   onRenameProject: (project: Project) => void
   onDeleteProject: (project: Project) => void
@@ -61,14 +72,13 @@ interface ProjectSidebarProps {
 export function ProjectSidebar({
   isOpen,
   onClose,
-  projects,
+  ownedProjects,
+  sharedProjects,
+  activeRoomId,
   onCreateProject,
   onRenameProject,
   onDeleteProject,
 }: ProjectSidebarProps) {
-  const ownedProjects = projects.filter((p) => p.isOwned)
-  const sharedProjects = projects.filter((p) => !p.isOwned)
-
   return (
     <>
       {isOpen && (
@@ -125,6 +135,7 @@ export function ProjectSidebar({
                     <ProjectItem
                       key={project.id}
                       project={project}
+                      isActive={project.id === activeRoomId}
                       onRename={() => onRenameProject(project)}
                       onDelete={() => onDeleteProject(project)}
                     />
@@ -149,8 +160,9 @@ export function ProjectSidebar({
                     <ProjectItem
                       key={project.id}
                       project={project}
-                      onRename={() => {}}
-                      onDelete={() => {}}
+                      isActive={project.id === activeRoomId}
+                      onRename={() => { }}
+                      onDelete={() => { }}
                     />
                   ))}
                 </div>
