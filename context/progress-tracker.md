@@ -8,7 +8,7 @@ Update this file after every meaningful implementation change.
 
 ## Current Goal
 
-- Feature 05: Prisma integration complete on branch prisma-integration
+- Feature 06: Project API routes complete on branch prisma-integration
 
 ## Completed
 
@@ -60,6 +60,10 @@ Update this file after every meaningful implementation change.
   - Migration `20260603163344_init_projects` applied to Prisma Postgres
   - Client generated to `app/generated/prisma/` via `prisma-client` generator
   - `lib/prisma.ts` — cached singleton; branches on `DATABASE_URL`: `prisma+postgres://` uses `accelerateUrl` + `@prisma/extension-accelerate`, all other URLs use `@prisma/adapter-pg` with a `pg.Pool`; cached on `globalThis.prisma` in development
+- Implemented Feature 06: Project REST API routes (branch: prisma-integration):
+  - `app/api/projects/route.ts` — GET lists the authenticated user's projects ordered by createdAt desc; POST creates a project with name defaulting to "Untitled Project" if omitted/blank
+  - `app/api/projects/[projectId]/route.ts` — PATCH renames, DELETE removes; both verify ownerId matches authenticated userId before mutating
+  - 401 returned for unauthenticated requests on all four routes; 403 for non-owner mutations; 404 when project does not exist
 
 ## In Progress
 
@@ -67,7 +71,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Feature 06 (check context/feature-specs/ for next spec)
+- Feature 07 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
