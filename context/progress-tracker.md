@@ -111,13 +111,20 @@ Update this file after every meaningful implementation change.
   - `components/editor/shape-panel.tsx` — floating `<Panel position="bottom-center">` pill toolbar inside the ReactFlow canvas; 6 draggable buttons using Lucide icons (RectangleHorizontal, Diamond, Circle, Pill, Cylinder, Hexagon); `onDragStart` encodes `{ shape, width, height }` as JSON in `application/ghost-ai-shape` data transfer
   - `components/editor/canvas-flow.tsx` — updated to register `nodeTypes`, capture `ReactFlowInstance` via `onInit` for coordinate conversion; `onDragOver` enables drop; `onDrop` parses payload, converts screen→flow position via `rfInstance.screenToFlowPosition`, creates node with empty label + default color + dragged shape, and adds it via `onNodesChange([{ type: "add", item }])`; `<ShapePanel>` mounted inside `<ReactFlow>` children
 
+- Implemented Feature 13: Node shape rendering and drag preview (branch: main):
+  - `components/editor/canvas-node.tsx` — shape rendering was already complete from Feature 12: rectangle/circle/pill via CSS (rounded classes), diamond/hexagon/cylinder via SVG with `preserveAspectRatio="none"` scaling; subtle `#2a2a30` border at rest, cyan `#00c8d4` when selected
+  - `components/editor/shape-panel.tsx` — added `ShapeDragPreview` component: renders the correct CSS or SVG shape at the cursor position as a `fixed`-position, `pointer-events: none` element via `createPortal` to `document.body`; `ShapePanel` tracks drag state (shape + cursor coords) via `onDragStart`/`onDrag`/`onDragEnd`; native browser drag ghost suppressed via `setDragImage(new Image(), 0, 0)`; preview cleared on drop or cancel
+
+- Implemented Feature 14: Node resizing and inline label editing (branch: main):
+  - `components/editor/canvas-node.tsx` — added `NodeResizer` (from `@xyflow/react`) to every shape branch; `isVisible={selected}`, per-shape minimum sizes in `SHAPE_MIN`, subtle cyan line/handle styles; added `editing`/`draft` local state + `useReactFlow().updateNodeData()` for committing label changes; `onDoubleClick` enters edit mode; a `textarea` with `nodrag nopan` classes overlays the node during editing; blur and Escape commit; SVG shape text elements hidden during editing and positioned after `</svg>` for correct stacking; placeholder text shown at 30% opacity when label is empty and not editing
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 13 (check context/feature-specs/ for next spec)
+- Feature 15 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
