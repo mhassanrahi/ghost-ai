@@ -65,13 +65,22 @@ Update this file after every meaningful implementation change.
   - `app/api/projects/[projectId]/route.ts` — PATCH renames, DELETE removes; both verify ownerId matches authenticated userId before mutating
   - 401 returned for unauthenticated requests on all four routes; 403 for non-owner mutations; 404 when project does not exist
 
+- Implemented Feature 07: Wire editor home to real project API (branch: feature/07-wire-editor-home):
+  - `lib/projects.ts` — `Project` interface + `getOwnedProjects(userId)` + `getSharedProjects(email)` Prisma helpers
+  - `app/api/projects/route.ts` — POST handler now accepts an optional client-supplied `id` to keep project DB ID and Liveblocks room ID aligned
+  - `hooks/use-project-actions.ts` — replaces mock `useProjectDialogs`; manages dialog state and calls real `POST/PATCH/DELETE /api/projects` endpoints; create generates `slug-suffix` room ID and navigates to new workspace; rename refreshes; delete redirects to `/editor` if active project else refreshes
+  - `components/editor/project-sidebar.tsx` — updated to accept `ownedProjects`/`sharedProjects` props directly, imports `Project` from `lib/projects`
+  - `components/editor/editor-home.tsx` — new client component owning sidebar toggle state + all dialogs wired to `useProjectActions`
+  - `app/editor/page.tsx` — converted to server component: fetches owned and shared projects server-side via Prisma, renders `<EditorHome>`
+  - Deleted `hooks/use-project-dialogs.ts` and `lib/mock-projects.ts` (replaced by real data)
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 07 (check context/feature-specs/ for next spec)
+- Feature 08 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
