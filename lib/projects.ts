@@ -15,11 +15,11 @@ export async function getOwnedProjects(userId: string): Promise<Project[]> {
   return rows.map((p) => ({ ...p, isOwned: true }))
 }
 
-export async function getSharedProjects(email: string): Promise<Project[]> {
-  if (!email) return []
+export async function getSharedProjects(emails: string[]): Promise<Project[]> {
+  if (!emails.length) return []
 
   const collabs = await prisma.projectCollaborator.findMany({
-    where: { email },
+    where: { email: { in: emails } },
     orderBy: { createdAt: "desc" },
     include: { project: { select: { id: true, name: true } } },
   })
