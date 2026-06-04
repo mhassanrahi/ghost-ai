@@ -48,30 +48,30 @@ export function EditorNavbar({
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-1">
+        {onOpenShare && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-xs"
+            onClick={onOpenShare}
+          >
+            <Share2 className="size-4" />
+            Share
+          </Button>
+        )}
         {onToggleAiSidebar && (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-1.5 text-xs"
-              onClick={onOpenShare}
-            >
-              <Share2 className="size-4" />
-              Share
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onToggleAiSidebar}
-              aria-label={isAiSidebarOpen ? "Close AI sidebar" : "Open AI sidebar"}
-            >
-              {isAiSidebarOpen ? (
-                <PanelRightClose className="size-5" />
-              ) : (
-                <PanelRightOpen className="size-5" />
-              )}
-            </Button>
-          </>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleAiSidebar}
+            aria-label={isAiSidebarOpen ? "Close AI sidebar" : "Open AI sidebar"}
+          >
+            {isAiSidebarOpen ? (
+              <PanelRightClose className="size-5" />
+            ) : (
+              <PanelRightOpen className="size-5" />
+            )}
+          </Button>
         )}
         <UserButton />
       </div>
