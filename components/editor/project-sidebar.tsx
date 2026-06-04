@@ -9,13 +9,17 @@ import { cn } from "@/lib/utils"
 
 interface ProjectItemProps {
   project: Project
+  isActive: boolean
   onRename: () => void
   onDelete: () => void
 }
 
-function ProjectItem({ project, onRename, onDelete }: ProjectItemProps) {
+function ProjectItem({ project, isActive, onRename, onDelete }: ProjectItemProps) {
   return (
-    <div className="group relative flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 hover:bg-elevated">
+    <div className={cn(
+      "group relative flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 hover:bg-elevated",
+      isActive && "bg-elevated"
+    )}>
       <span className="flex-1 truncate text-sm text-copy-primary">
         {project.name}
       </span>
@@ -54,6 +58,7 @@ interface ProjectSidebarProps {
   onClose: () => void
   ownedProjects: Project[]
   sharedProjects: Project[]
+  activeRoomId?: string
   onCreateProject: () => void
   onRenameProject: (project: Project) => void
   onDeleteProject: (project: Project) => void
@@ -64,6 +69,7 @@ export function ProjectSidebar({
   onClose,
   ownedProjects,
   sharedProjects,
+  activeRoomId,
   onCreateProject,
   onRenameProject,
   onDeleteProject,
@@ -124,6 +130,7 @@ export function ProjectSidebar({
                     <ProjectItem
                       key={project.id}
                       project={project}
+                      isActive={project.id === activeRoomId}
                       onRename={() => onRenameProject(project)}
                       onDelete={() => onDeleteProject(project)}
                     />
@@ -148,6 +155,7 @@ export function ProjectSidebar({
                     <ProjectItem
                       key={project.id}
                       project={project}
+                      isActive={project.id === activeRoomId}
                       onRename={() => {}}
                       onDelete={() => {}}
                     />

@@ -74,13 +74,21 @@ Update this file after every meaningful implementation change.
   - `app/editor/page.tsx` — converted to server component: fetches owned and shared projects server-side via Prisma, renders `<EditorHome>`
   - Deleted `hooks/use-project-dialogs.ts` and `lib/mock-projects.ts` (replaced by real data)
 
+- Implemented Feature 08: Editor workspace shell (branch: feature/07-wire-editor-home):
+  - `lib/project-access.ts` — `getCurrentUser()` returns `{ userId, email }` from Clerk; `getProjectIfAccessible(projectId, userId, email)` returns `{ id, name }` if the user is owner or collaborator, null otherwise
+  - `components/editor/access-denied.tsx` — centered layout with Lock icon, short message, and "Back to projects" link to `/editor`
+  - `components/editor/project-sidebar.tsx` — added `activeRoomId?: string` prop; active project highlighted with `bg-elevated`
+  - `components/editor/editor-navbar.tsx` — added optional `projectName`, `isAiSidebarOpen`, `onToggleAiSidebar` props; workspace view shows project name in center and disabled Share + AI sidebar toggle in right section
+  - `components/editor/workspace-shell.tsx` — client component owning sidebar/AI sidebar toggle state and all project dialogs; full-viewport layout with canvas placeholder and collapsible AI sidebar placeholder
+  - `app/editor/[roomId]/page.tsx` — server component: unauthenticated users redirect to `/sign-in`; missing/inaccessible projects render `AccessDenied`; accessible projects render `WorkspaceShell` with server-fetched project lists
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 08 (check context/feature-specs/ for next spec)
+- Feature 09 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
