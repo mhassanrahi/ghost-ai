@@ -50,11 +50,12 @@ export function useShareDialog(projectId: string) {
     async (email: string) => {
       setIsLoading(true)
       try {
-        await fetch(`/api/projects/${projectId}/collaborators`, {
+        const res = await fetch(`/api/projects/${projectId}/collaborators`, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email }),
         })
+        if (!res.ok) throw new Error("Failed to remove collaborator")
         await fetchCollaborators()
       } finally {
         setIsLoading(false)
