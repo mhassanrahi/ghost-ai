@@ -15,19 +15,21 @@ export function CanvasFlow() {
     })
 
   return (
-    <ReactFlow
-      nodes={nodes}
-      edges={edges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      onConnect={onConnect}
-      onDelete={onDelete}
-      connectionMode={ConnectionMode.Loose}
-      fitView
-    >
-      <Background variant={BackgroundVariant.Dots} />
-      <MiniMap />
-      <Cursors />
-    </ReactFlow>
+    <div className="w-full h-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onDelete={onDelete}
+        connectionMode={ConnectionMode.Loose}
+        fitView
+      >
+        <Background variant={BackgroundVariant.Dots} />
+        <MiniMap />
+        <Cursors />
+      </ReactFlow>
+    </div>
   )
 }
