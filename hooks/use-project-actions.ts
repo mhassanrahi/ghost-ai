@@ -59,7 +59,7 @@ export function useProjectActions() {
       if (!res.ok) throw new Error("Failed to create project")
       const project: { id: string } = await res.json()
       closeDialog()
-      router.push(`/editor/${project.id}`)
+      router.push(`/editor/${encodeURIComponent(project.id)}`)
     } finally {
       setIsLoading(false)
     }
@@ -70,7 +70,7 @@ export function useProjectActions() {
     const name = projectName.trim()
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/projects/${selectedProject.id}`, {
+      const res = await fetch(`/api/projects/${encodeURIComponent(selectedProject.id)}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
@@ -87,7 +87,7 @@ export function useProjectActions() {
     if (!selectedProject) return
     setIsLoading(true)
     try {
-      const res = await fetch(`/api/projects/${selectedProject.id}`, {
+      const res = await fetch(`/api/projects/${encodeURIComponent(selectedProject.id)}`, {
         method: "DELETE",
       })
       if (!res.ok && res.status !== 204) throw new Error("Failed to delete project")
