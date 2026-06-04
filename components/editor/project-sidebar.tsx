@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import { Pencil, Plus, Trash2, X } from "lucide-react"
 
 import { type Project } from "@/lib/projects"
@@ -15,11 +16,15 @@ interface ProjectItemProps {
 }
 
 function ProjectItem({ project, isActive, onRename, onDelete }: ProjectItemProps) {
+  const router = useRouter()
   return (
-    <div className={cn(
-      "group relative flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 hover:bg-elevated",
-      isActive && "bg-elevated"
-    )}>
+    <div
+      className={cn(
+        "group relative flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 hover:bg-elevated",
+        isActive && "bg-elevated"
+      )}
+      onClick={() => router.push(`/editor/${project.id}`)}
+    >
       <span className="flex-1 truncate text-sm text-copy-primary">
         {project.name}
       </span>
@@ -156,8 +161,8 @@ export function ProjectSidebar({
                       key={project.id}
                       project={project}
                       isActive={project.id === activeRoomId}
-                      onRename={() => {}}
-                      onDelete={() => {}}
+                      onRename={() => { }}
+                      onDelete={() => { }}
                     />
                   ))}
                 </div>
