@@ -105,13 +105,19 @@ Update this file after every meaningful implementation change.
   - `components/editor/canvas-wrapper.tsx` — client component mounting `LiveblocksProvider` (auth: `/api/liveblocks-auth`) + `RoomProvider` (room ID from prop, initial presence `cursor: null, isThinking: false`); wraps `CanvasFlow` in `ErrorBoundary` + `ClientSideSuspense` with loading and error fallback UI
   - `components/editor/workspace-shell.tsx` — canvas placeholder replaced with `<CanvasWrapper roomId={project.id} />`
 
+- Implemented Feature 12: Shape panel (branch: feature/07-wire-editor-home):
+  - `types/canvas.ts` — added `NodeShape` union type (rectangle, diamond, circle, pill, cylinder, hexagon); expanded `NodeData.shape` to use it; added `NODE_SHAPES` record with per-shape default dimensions (rect wider than tall, circle square, diamond taller for label room); added `NODE_COLORS` array (8 dark fill + contrasting text pairs from ui-context) and `DEFAULT_NODE_COLOR` constant
+  - `components/editor/canvas-node.tsx` — new `CanvasNodeComponent` registered as `canvasNode` node type; renders bordered rectangle with centered label, 4 source handles (top/right/bottom/left hidden by React Flow until hover), fill/text colors resolved from `NODE_COLORS` lookup, cyan border on selection
+  - `components/editor/shape-panel.tsx` — floating `<Panel position="bottom-center">` pill toolbar inside the ReactFlow canvas; 6 draggable buttons using Lucide icons (RectangleHorizontal, Diamond, Circle, Pill, Cylinder, Hexagon); `onDragStart` encodes `{ shape, width, height }` as JSON in `application/ghost-ai-shape` data transfer
+  - `components/editor/canvas-flow.tsx` — updated to register `nodeTypes`, capture `ReactFlowInstance` via `onInit` for coordinate conversion; `onDragOver` enables drop; `onDrop` parses payload, converts screen→flow position via `rfInstance.screenToFlowPosition`, creates node with empty label + default color + dragged shape, and adds it via `onNodesChange([{ type: "add", item }])`; `<ShapePanel>` mounted inside `<ReactFlow>` children
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 12 (check context/feature-specs/ for next spec)
+- Feature 13 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
