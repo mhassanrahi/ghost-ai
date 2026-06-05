@@ -121,6 +121,14 @@ Update this file after every meaningful implementation change.
 - Implemented Feature 15: Node color toolbar (branch: main):
   - `components/editor/canvas-node.tsx` — added `ColorSwatch` helper component (manages own hover state, renders a 16×16 circular swatch with active border + tight glow via `box-shadow`); added `colorToolbar` using `NodeToolbar` from `@xyflow/react` (`position={Position.Top}`, `offset={8}`, `isVisible={selected}`); toolbar is a pill container with 8 swatches from `NODE_COLORS`; `nodrag nopan` + `stopPropagation` on all swatch interactions prevents canvas drag/pan; clicking a swatch calls `updateNodeData(id, { color: fill })`; text color is derived from the fill lookup so both update atomically; all shape branches wrapped in Fragment to include the toolbar
 
+- Implemented Feature 18: Starter template library (branch: control-bar):
+  - `components/editor/starter-templates.ts` — `CanvasTemplate` interface + `n()`/`e()` helper functions + three pre-built templates: Microservices Architecture (API gateway → services → DBs), CI/CD Pipeline (developer → git → CI → test/build → registry → staging → production), Event-Driven System (producers → event bus → consumers → data store)
+  - `components/editor/starter-templates-modal.tsx` — shadcn `Dialog` with scrollable 3-column card grid; each card shows template name, description, lightweight SVG preview (bounds-fitted, edges as lines, nodes as colored SVG shapes by type), and "Use Template" button; preview is pure SVG with no React Flow instance
+  - `components/editor/canvas-flow.tsx` — added `pendingTemplate` + `onTemplateImported` props; `useEffect` fires on non-null `pendingTemplate` to remove all existing nodes/edges then add template nodes/edges via `useLiveblocksFlow` change handlers; calls `fitView({ duration: 300 })` after import; uses refs to avoid stale closures
+  - `components/editor/canvas-wrapper.tsx` — threads `pendingTemplate` + `onTemplateImported` props through to `CanvasFlow`
+  - `components/editor/editor-navbar.tsx` — added `onOpenTemplates?` prop; "Templates" button with `LayoutTemplate` icon rendered left of Share when prop is present
+  - `components/editor/workspace-shell.tsx` — added `isTemplatesOpen` + `pendingTemplate` state; mounts `StarterTemplatesModal`; `handleTemplateImport` closes modal and sets pending template; `CanvasWrapper` receives pending template and resets it on import
+
 - Implemented Feature 17: Canvas ergonomics (branch: main):
   - `components/editor/canvas-controls.tsx` — floating pill control bar at `bottom-left`; zoom out / fit view / zoom in buttons wired to `rfInstance` with 300ms animation; undo / redo buttons wired to Liveblocks `useUndo`/`useRedo`; disabled state uses `useCanUndo`/`useCanRedo`; disabled buttons at 30% opacity; thin vertical divider separates zoom and history groups
   - `hooks/useKeyboardShortcuts.ts` — `useKeyboardShortcuts({ rfInstance, onUndo, onRedo })` hook; listens on `window` `keydown`; skips `input`, `textarea`, and `contentEditable` targets; shortcuts: `+`/`=` zoom in, `-` zoom out, `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` redo, `Ctrl/Cmd+Y` redo
@@ -138,7 +146,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Feature 17 (check context/feature-specs/ for next spec)
+- Feature 19 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
