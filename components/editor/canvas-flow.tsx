@@ -13,12 +13,15 @@ import { useLiveblocksFlow, Cursors } from "@liveblocks/react-flow"
 import type { CanvasNode, CanvasEdge, NodeShape } from "@/types/canvas"
 import { DEFAULT_NODE_COLOR } from "@/types/canvas"
 import { CanvasNodeComponent } from "@/components/editor/canvas-node"
+import { CanvasEdgeComponent } from "@/components/editor/canvas-edge"
 import { ShapePanel } from "@/components/editor/shape-panel"
 import "@xyflow/react/dist/style.css"
 import "@liveblocks/react-ui/styles.css"
 import "@liveblocks/react-flow/styles.css"
 
 const nodeTypes = { canvasNode: CanvasNodeComponent }
+const edgeTypes = { canvasEdge: CanvasEdgeComponent }
+const defaultEdgeOptions = { type: "canvasEdge", data: {} }
 let nodeCounter = 0
 
 interface DragShapePayload {
@@ -84,6 +87,8 @@ export function CanvasFlow() {
         onConnect={onConnect}
         onDelete={onDelete}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
         connectionMode={ConnectionMode.Loose}
         onInit={setRfInstance}
         onDrop={onDrop}
