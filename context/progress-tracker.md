@@ -118,13 +118,16 @@ Update this file after every meaningful implementation change.
 - Implemented Feature 14: Node resizing and inline label editing (branch: main):
   - `components/editor/canvas-node.tsx` — added `NodeResizer` (from `@xyflow/react`) to every shape branch; `isVisible={selected}`, per-shape minimum sizes in `SHAPE_MIN`, subtle cyan line/handle styles; added `editing`/`draft` local state + `useReactFlow().updateNodeData()` for committing label changes; `onDoubleClick` enters edit mode; a `textarea` with `nodrag nopan` classes overlays the node during editing; blur and Escape commit; SVG shape text elements hidden during editing and positioned after `</svg>` for correct stacking; placeholder text shown at 30% opacity when label is empty and not editing
 
+- Implemented Feature 15: Node color toolbar (branch: main):
+  - `components/editor/canvas-node.tsx` — added `ColorSwatch` helper component (manages own hover state, renders a 16×16 circular swatch with active border + tight glow via `box-shadow`); added `colorToolbar` using `NodeToolbar` from `@xyflow/react` (`position={Position.Top}`, `offset={8}`, `isVisible={selected}`); toolbar is a pill container with 8 swatches from `NODE_COLORS`; `nodrag nopan` + `stopPropagation` on all swatch interactions prevents canvas drag/pan; clicking a swatch calls `updateNodeData(id, { color: fill })`; text color is derived from the fill lookup so both update atomically; all shape branches wrapped in Fragment to include the toolbar
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 15 (check context/feature-specs/ for next spec)
+- Feature 16 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 

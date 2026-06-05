@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import type { NodeProps } from "@xyflow/react"
-import { Handle, Position, NodeResizer, useReactFlow } from "@xyflow/react"
+import { Handle, Position, NodeResizer, NodeToolbar, useReactFlow } from "@xyflow/react"
 import type { CanvasNode } from "@/types/canvas"
 import { NODE_COLORS, DEFAULT_NODE_COLOR, NODE_SHAPES } from "@/types/canvas"
 
@@ -25,12 +25,50 @@ const RESIZER_HANDLE: React.CSSProperties = {
   opacity: 0.75,
 }
 
+function ColorSwatch({
+  fill,
+  text,
+  isActive,
+  onSelect,
+}: {
+  fill: string
+  text: string
+  isActive: boolean
+  onSelect: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <button
+      className="nodrag nopan rounded-full cursor-pointer"
+      style={{
+        width: 16,
+        height: 16,
+        backgroundColor: fill,
+        border: `2px solid ${isActive ? text : "transparent"}`,
+        boxShadow: isActive
+          ? `0 0 0 1px ${text}55`
+          : hovered
+          ? `0 0 5px 2px ${text}55`
+          : undefined,
+        outline: "none",
+        flexShrink: 0,
+        transition: "box-shadow 0.12s ease",
+      }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={(e) => {
+        e.stopPropagation()
+        onSelect()
+      }}
+    />
+  )
+}
+
 export function CanvasNodeComponent({
   data,
   selected,
   id,
-  width,
-  height,
 }: NodeProps<CanvasNode>) {
   const shape = data.shape ?? "rectangle"
   const colorEntry = NODE_COLORS.find((c) => c.fill === data.color) ?? DEFAULT_NODE_COLOR
@@ -72,6 +110,26 @@ export function CanvasNodeComponent({
       e.stopPropagation()
     },
     [commitEdit]
+  )
+
+  const colorToolbar = (
+    <NodeToolbar position={Position.Top} offset={8} isVisible={selected}>
+      <div
+        className="nodrag nopan flex gap-1.5 rounded-xl px-2 py-1.5"
+        style={{ background: "#18181c", border: "1px solid #2a2a30" }}
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        {NODE_COLORS.map(({ fill, text }) => (
+          <ColorSwatch
+            key={fill}
+            fill={fill}
+            text={text}
+            isActive={colorEntry.fill === fill}
+            onSelect={() => updateNodeData(id, { color: fill })}
+          />
+        ))}
+      </div>
+    </NodeToolbar>
   )
 
   const handles = (
@@ -129,51 +187,60 @@ export function CanvasNodeComponent({
 
   if (shape === "rectangle") {
     return (
-      <div
-        className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs overflow-hidden"
-        style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
-        onDoubleClick={onDoubleClick}
-      >
-        {resizer}
-        {handles}
-        {editingOverlay}
-        {labelEl}
-      </div>
+      <>
+        {colorToolbar}
+        <div
+          className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs overflow-hidden"
+          style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
+          onDoubleClick={onDoubleClick}
+        >
+          {resizer}
+          {handles}
+          {editingOverlay}
+          {labelEl}
+        </div>
+      </>
     )
   }
 
   if (shape === "circle") {
     return (
-      <div
-        className="relative flex h-full w-full items-center justify-center rounded-full border text-xs overflow-hidden"
-        style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
-        onDoubleClick={onDoubleClick}
-      >
-        {resizer}
-        {handles}
-        {editingOverlay}
-        {labelEl}
-      </div>
+      <>
+        {colorToolbar}
+        <div
+          className="relative flex h-full w-full items-center justify-center rounded-full border text-xs overflow-hidden"
+          style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
+          onDoubleClick={onDoubleClick}
+        >
+          {resizer}
+          {handles}
+          {editingOverlay}
+          {labelEl}
+        </div>
+      </>
     )
   }
 
   if (shape === "pill") {
     return (
-      <div
-        className="relative flex h-full w-full items-center justify-center border text-xs overflow-hidden"
-        style={{
-          backgroundColor: colorEntry.fill,
-          color: colorEntry.text,
-          borderColor,
-          borderRadius: 9999,
-        }}
-        onDoubleClick={onDoubleClick}
-      >
-        {resizer}
-        {handles}
-        {editingOverlay}
-        {labelEl}
-      </div>
+      <>
+        {colorToolbar}
+        <div
+          className="relative flex h-full w-full items-center justify-center border text-xs overflow-hidden"
+          style={{
+            backgroundColor: colorEntry.fill,
+            color: colorEntry.text,
+            borderColor,
+            borderRadius: 9999,
+          }}
+          onDoubleClick={onDoubleClick}
+        >
+          {resizer}
+          {handles}
+          {editingOverlay}
+          {labelEl}
+        </div>
+      </>
     )
   }
 
@@ -186,45 +253,47 @@ export function CanvasNodeComponent({
   if (shape === "diamond") {
     const pts = `${vw / 2},${pad} ${vw - pad},${vh / 2} ${vw / 2},${vh - pad} ${pad},${vh / 2}`
     return (
-      <div
-        className="relative w-full h-full"
-        onDoubleClick={onDoubleClick}
-      >
-        {resizer}
-        {handles}
-        <svg
-          style={{ display: "block", width: "100%", height: "100%" }}
-          viewBox={`0 0 ${vw} ${vh}`}
-          preserveAspectRatio="none"
+      <>
+        {colorToolbar}
+        <div
+          className="relative w-full h-full"
+          onDoubleClick={onDoubleClick}
         >
-          <polygon
-            points={pts}
-            fill={colorEntry.fill}
-            stroke={borderColor}
-            strokeWidth={2}
-          />
-          {!editing && (
-            <text
-              x={vw / 2}
-              y={vh / 2}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fill={colorEntry.text}
-              fillOpacity={data.label ? 1 : 0.3}
-              fontSize={12}
-              style={{ userSelect: "none" }}
-            >
-              {data.label || "Label..."}
-            </text>
-          )}
-        </svg>
-        {editingOverlay}
-      </div>
+          {resizer}
+          {handles}
+          <svg
+            style={{ display: "block", width: "100%", height: "100%" }}
+            viewBox={`0 0 ${vw} ${vh}`}
+            preserveAspectRatio="none"
+          >
+            <polygon
+              points={pts}
+              fill={colorEntry.fill}
+              stroke={borderColor}
+              strokeWidth={2}
+            />
+            {!editing && (
+              <text
+                x={vw / 2}
+                y={vh / 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={colorEntry.text}
+                fillOpacity={data.label ? 1 : 0.3}
+                fontSize={12}
+                style={{ userSelect: "none" }}
+              >
+                {data.label || "Label..."}
+              </text>
+            )}
+          </svg>
+          {editingOverlay}
+        </div>
+      </>
     )
   }
 
   if (shape === "hexagon") {
-    // Flat-side hexagon: six points
     const pts = [
       `${vw / 4 + pad},${pad}`,
       `${(3 * vw) / 4 - pad},${pad}`,
@@ -234,40 +303,43 @@ export function CanvasNodeComponent({
       `${pad},${vh / 2}`,
     ].join(" ")
     return (
-      <div
-        className="relative w-full h-full"
-        onDoubleClick={onDoubleClick}
-      >
-        {resizer}
-        {handles}
-        <svg
-          style={{ display: "block", width: "100%", height: "100%" }}
-          viewBox={`0 0 ${vw} ${vh}`}
-          preserveAspectRatio="none"
+      <>
+        {colorToolbar}
+        <div
+          className="relative w-full h-full"
+          onDoubleClick={onDoubleClick}
         >
-          <polygon
-            points={pts}
-            fill={colorEntry.fill}
-            stroke={borderColor}
-            strokeWidth={2}
-          />
-          {!editing && (
-            <text
-              x={vw / 2}
-              y={vh / 2}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fill={colorEntry.text}
-              fillOpacity={data.label ? 1 : 0.3}
-              fontSize={12}
-              style={{ userSelect: "none" }}
-            >
-              {data.label || "Label..."}
-            </text>
-          )}
-        </svg>
-        {editingOverlay}
-      </div>
+          {resizer}
+          {handles}
+          <svg
+            style={{ display: "block", width: "100%", height: "100%" }}
+            viewBox={`0 0 ${vw} ${vh}`}
+            preserveAspectRatio="none"
+          >
+            <polygon
+              points={pts}
+              fill={colorEntry.fill}
+              stroke={borderColor}
+              strokeWidth={2}
+            />
+            {!editing && (
+              <text
+                x={vw / 2}
+                y={vh / 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={colorEntry.text}
+                fillOpacity={data.label ? 1 : 0.3}
+                fontSize={12}
+                style={{ userSelect: "none" }}
+              >
+                {data.label || "Label..."}
+              </text>
+            )}
+          </svg>
+          {editingOverlay}
+        </div>
+      </>
     )
   }
 
@@ -277,94 +349,100 @@ export function CanvasNodeComponent({
     const topY = pad + ry
     const botY = vh - pad - ry
     return (
-      <div
-        className="relative w-full h-full"
-        onDoubleClick={onDoubleClick}
-      >
-        {resizer}
-        {handles}
-        <svg
-          style={{ display: "block", width: "100%", height: "100%" }}
-          viewBox={`0 0 ${vw} ${vh}`}
-          preserveAspectRatio="none"
+      <>
+        {colorToolbar}
+        <div
+          className="relative w-full h-full"
+          onDoubleClick={onDoubleClick}
         >
-          {/* bottom cap */}
-          <ellipse
-            cx={vw / 2}
-            cy={botY}
-            rx={rx}
-            ry={ry}
-            fill={colorEntry.fill}
-            stroke={borderColor}
-            strokeWidth={2}
-          />
-          {/* body fill (covers upper half of bottom cap) */}
-          <rect
-            x={pad}
-            y={topY}
-            width={vw - pad * 2}
-            height={botY - topY}
-            fill={colorEntry.fill}
-            stroke="none"
-          />
-          {/* body side borders */}
-          <line
-            x1={pad}
-            y1={topY}
-            x2={pad}
-            y2={botY}
-            stroke={borderColor}
-            strokeWidth={2}
-          />
-          <line
-            x1={vw - pad}
-            y1={topY}
-            x2={vw - pad}
-            y2={botY}
-            stroke={borderColor}
-            strokeWidth={2}
-          />
-          {/* top cap */}
-          <ellipse
-            cx={vw / 2}
-            cy={topY}
-            rx={rx}
-            ry={ry}
-            fill={colorEntry.fill}
-            stroke={borderColor}
-            strokeWidth={2}
-          />
-          {!editing && (
-            <text
-              x={vw / 2}
-              y={(topY + botY) / 2}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fill={colorEntry.text}
-              fillOpacity={data.label ? 1 : 0.3}
-              fontSize={12}
-              style={{ userSelect: "none" }}
-            >
-              {data.label || "Label..."}
-            </text>
-          )}
-        </svg>
-        {editingOverlay}
-      </div>
+          {resizer}
+          {handles}
+          <svg
+            style={{ display: "block", width: "100%", height: "100%" }}
+            viewBox={`0 0 ${vw} ${vh}`}
+            preserveAspectRatio="none"
+          >
+            {/* bottom cap */}
+            <ellipse
+              cx={vw / 2}
+              cy={botY}
+              rx={rx}
+              ry={ry}
+              fill={colorEntry.fill}
+              stroke={borderColor}
+              strokeWidth={2}
+            />
+            {/* body fill (covers upper half of bottom cap) */}
+            <rect
+              x={pad}
+              y={topY}
+              width={vw - pad * 2}
+              height={botY - topY}
+              fill={colorEntry.fill}
+              stroke="none"
+            />
+            {/* body side borders */}
+            <line
+              x1={pad}
+              y1={topY}
+              x2={pad}
+              y2={botY}
+              stroke={borderColor}
+              strokeWidth={2}
+            />
+            <line
+              x1={vw - pad}
+              y1={topY}
+              x2={vw - pad}
+              y2={botY}
+              stroke={borderColor}
+              strokeWidth={2}
+            />
+            {/* top cap */}
+            <ellipse
+              cx={vw / 2}
+              cy={topY}
+              rx={rx}
+              ry={ry}
+              fill={colorEntry.fill}
+              stroke={borderColor}
+              strokeWidth={2}
+            />
+            {!editing && (
+              <text
+                x={vw / 2}
+                y={(topY + botY) / 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fill={colorEntry.text}
+                fillOpacity={data.label ? 1 : 0.3}
+                fontSize={12}
+                style={{ userSelect: "none" }}
+              >
+                {data.label || "Label..."}
+              </text>
+            )}
+          </svg>
+          {editingOverlay}
+        </div>
+      </>
     )
   }
 
   // fallback
   return (
-    <div
-      className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs overflow-hidden"
-      style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
-      onDoubleClick={onDoubleClick}
-    >
-      {resizer}
-      {handles}
-      {editingOverlay}
-      {labelEl}
-    </div>
+    <>
+      {colorToolbar}
+      <div
+        className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs overflow-hidden"
+        style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
+        onDoubleClick={onDoubleClick}
+      >
+        {resizer}
+        {handles}
+        {editingOverlay}
+        {labelEl}
+      </div>
+    </>
   )
 }
