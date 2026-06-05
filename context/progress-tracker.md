@@ -121,13 +121,19 @@ Update this file after every meaningful implementation change.
 - Implemented Feature 15: Node color toolbar (branch: main):
   - `components/editor/canvas-node.tsx` — added `ColorSwatch` helper component (manages own hover state, renders a 16×16 circular swatch with active border + tight glow via `box-shadow`); added `colorToolbar` using `NodeToolbar` from `@xyflow/react` (`position={Position.Top}`, `offset={8}`, `isVisible={selected}`); toolbar is a pill container with 8 swatches from `NODE_COLORS`; `nodrag nopan` + `stopPropagation` on all swatch interactions prevents canvas drag/pan; clicking a swatch calls `updateNodeData(id, { color: fill })`; text color is derived from the fill lookup so both update atomically; all shape branches wrapped in Fragment to include the toolbar
 
+- Implemented Feature 16: Edge behavior (branch: nodes-color-toolbar):
+  - `types/canvas.ts` — added `label?: string` to `EdgeData`
+  - `app/globals.css` — added React Flow handle overrides: 10×10 white circular dots with dark border, `opacity: 0` by default, faded in on `.react-flow__node:hover`, `.selected`, and during active connections
+  - `components/editor/canvas-edge.tsx` — new `CanvasEdgeComponent` registered as `canvasEdge` type; uses `getSmoothStepPath` for right-angle routing; wide (20px) transparent hitbox path overlaid on a thin (1.5px) visible path for easy clicking; per-edge SVG `<marker>` defs (dim `#808090` / bright `#f0f0f4`) switched on hover or selection; `EdgeLabelRenderer` positions label at path midpoint (`labelX`/`labelY` from `getSmoothStepPath`); double-click opens a `ch`-width auto-growing input; blur/Enter/Escape commit via `updateEdgeData` → `onEdgesChange` → Liveblocks sync; saved labels shown as pill badges; faint "Add label…" hint shown on active unlabeled edges; all label interactions carry `nodrag nopan` + `stopPropagation`
+  - `components/editor/canvas-flow.tsx` — added `edgeTypes = { canvasEdge: CanvasEdgeComponent }` and `defaultEdgeOptions = { type: "canvasEdge", data: {} }`; both wired into `<ReactFlow>` so all new connections use the custom renderer
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 16 (check context/feature-specs/ for next spec)
+- Feature 17 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 

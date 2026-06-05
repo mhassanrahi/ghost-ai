@@ -37,15 +37,19 @@ function ColorSwatch({
   onSelect: () => void
 }) {
   const [hovered, setHovered] = useState(false)
+  const [focused, setFocused] = useState(false)
   return (
     <button
+      aria-label={`Color ${fill}`}
       className="nodrag nopan rounded-full cursor-pointer"
       style={{
         width: 16,
         height: 16,
         backgroundColor: fill,
         border: `2px solid ${isActive ? text : "transparent"}`,
-        boxShadow: isActive
+        boxShadow: focused
+          ? `0 0 0 2px #fff, 0 0 0 4px ${text}`
+          : isActive
           ? `0 0 0 1px ${text}55`
           : hovered
           ? `0 0 5px 2px ${text}55`
@@ -57,6 +61,8 @@ function ColorSwatch({
       onMouseDown={(e) => e.stopPropagation()}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       onClick={(e) => {
         e.stopPropagation()
         onSelect()
@@ -134,10 +140,10 @@ export function CanvasNodeComponent({
 
   const handles = (
     <>
-      <Handle type="source" position={Position.Top} />
-      <Handle type="source" position={Position.Right} />
-      <Handle type="source" position={Position.Bottom} />
-      <Handle type="source" position={Position.Left} />
+      <Handle id="top"    type="source" position={Position.Top} />
+      <Handle id="right"  type="source" position={Position.Right} />
+      <Handle id="bottom" type="source" position={Position.Bottom} />
+      <Handle id="left"   type="source" position={Position.Left} />
     </>
   )
 
