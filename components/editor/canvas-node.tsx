@@ -1,13 +1,34 @@
 "use client"
 
+import { useState, useRef, useEffect, useCallback } from "react"
 import type { NodeProps } from "@xyflow/react"
-import { Handle, Position } from "@xyflow/react"
+import { Handle, Position, NodeResizer, useReactFlow } from "@xyflow/react"
 import type { CanvasNode } from "@/types/canvas"
 import { NODE_COLORS, DEFAULT_NODE_COLOR, NODE_SHAPES } from "@/types/canvas"
+
+const SHAPE_MIN: Record<string, { minWidth: number; minHeight: number }> = {
+  rectangle: { minWidth: 80, minHeight: 40 },
+  diamond:   { minWidth: 80, minHeight: 60 },
+  circle:    { minWidth: 40, minHeight: 40 },
+  pill:      { minWidth: 80, minHeight: 30 },
+  cylinder:  { minWidth: 50, minHeight: 50 },
+  hexagon:   { minWidth: 60, minHeight: 50 },
+}
+
+const RESIZER_LINE: React.CSSProperties  = { borderColor: "#00c8d4", borderWidth: 1, opacity: 0.5 }
+const RESIZER_HANDLE: React.CSSProperties = {
+  backgroundColor: "#00c8d4",
+  borderColor: "#00c8d4",
+  width: 7,
+  height: 7,
+  borderRadius: 2,
+  opacity: 0.75,
+}
 
 export function CanvasNodeComponent({
   data,
   selected,
+  id,
   width,
   height,
 }: NodeProps<CanvasNode>) {
@@ -15,8 +36,43 @@ export function CanvasNodeComponent({
   const colorEntry = NODE_COLORS.find((c) => c.fill === data.color) ?? DEFAULT_NODE_COLOR
   const borderColor = selected ? "#00c8d4" : "#2a2a30"
   const defaults = NODE_SHAPES[shape]
-  const w = width ?? defaults.width
-  const h = height ?? defaults.height
+  const { minWidth, minHeight } = SHAPE_MIN[shape] ?? { minWidth: 40, minHeight: 30 }
+
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(data.label)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const { updateNodeData } = useReactFlow()
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(data.label)
+      requestAnimationFrame(() => {
+        textareaRef.current?.focus()
+        textareaRef.current?.select()
+      })
+    }
+  }, [editing]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const commitEdit = useCallback(() => {
+    setEditing(false)
+    updateNodeData(id, { label: draft })
+  }, [id, draft, updateNodeData])
+
+  const onDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation()
+    setEditing(true)
+  }, [])
+
+  const onTextareaKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Escape" || e.key === "Enter") {
+        e.preventDefault()
+        commitEdit()
+      }
+      e.stopPropagation()
+    },
+    [commitEdit]
+  )
 
   const handles = (
     <>
@@ -27,10 +83,46 @@ export function CanvasNodeComponent({
     </>
   )
 
-  const labelEl = data.label ? (
-    <span className="select-none px-2 text-center text-xs leading-tight">
-      {data.label}
-    </span>
+  const resizer = (
+    <NodeResizer
+      isVisible={selected}
+      minWidth={minWidth}
+      minHeight={minHeight}
+      lineStyle={RESIZER_LINE}
+      handleStyle={RESIZER_HANDLE}
+    />
+  )
+
+  const editingOverlay = editing ? (
+    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+      <textarea
+        ref={textareaRef}
+        className="nodrag nopan pointer-events-auto w-full bg-transparent border-none outline-none resize-none text-center text-xs leading-tight overflow-hidden"
+        style={{ color: colorEntry.text, padding: "0 8px" }}
+        value={draft}
+        placeholder="Label..."
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commitEdit}
+        onKeyDown={onTextareaKeyDown}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      />
+    </div>
+  ) : null
+
+  const labelEl = !editing ? (
+    data.label ? (
+      <span className="select-none px-2 text-center text-xs leading-tight pointer-events-none">
+        {data.label}
+      </span>
+    ) : (
+      <span
+        className="select-none px-2 text-center text-xs leading-tight pointer-events-none"
+        style={{ opacity: 0.3 }}
+      >
+        Label...
+      </span>
+    )
   ) : null
 
   // --- CSS shapes ---
@@ -38,10 +130,13 @@ export function CanvasNodeComponent({
   if (shape === "rectangle") {
     return (
       <div
-        className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs"
+        className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs overflow-hidden"
         style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
+        onDoubleClick={onDoubleClick}
       >
+        {resizer}
         {handles}
+        {editingOverlay}
         {labelEl}
       </div>
     )
@@ -50,10 +145,13 @@ export function CanvasNodeComponent({
   if (shape === "circle") {
     return (
       <div
-        className="relative flex h-full w-full items-center justify-center rounded-full border text-xs"
+        className="relative flex h-full w-full items-center justify-center rounded-full border text-xs overflow-hidden"
         style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
+        onDoubleClick={onDoubleClick}
       >
+        {resizer}
         {handles}
+        {editingOverlay}
         {labelEl}
       </div>
     )
@@ -62,15 +160,18 @@ export function CanvasNodeComponent({
   if (shape === "pill") {
     return (
       <div
-        className="relative flex h-full w-full items-center justify-center border text-xs"
+        className="relative flex h-full w-full items-center justify-center border text-xs overflow-hidden"
         style={{
           backgroundColor: colorEntry.fill,
           color: colorEntry.text,
           borderColor,
           borderRadius: 9999,
         }}
+        onDoubleClick={onDoubleClick}
       >
+        {resizer}
         {handles}
+        {editingOverlay}
         {labelEl}
       </div>
     )
@@ -85,12 +186,14 @@ export function CanvasNodeComponent({
   if (shape === "diamond") {
     const pts = `${vw / 2},${pad} ${vw - pad},${vh / 2} ${vw / 2},${vh - pad} ${pad},${vh / 2}`
     return (
-      <div className="relative" style={{ width: w, height: h }}>
+      <div
+        className="relative w-full h-full"
+        onDoubleClick={onDoubleClick}
+      >
+        {resizer}
         {handles}
         <svg
-          className="absolute inset-0"
-          width="100%"
-          height="100%"
+          style={{ display: "block", width: "100%", height: "100%" }}
           viewBox={`0 0 ${vw} ${vh}`}
           preserveAspectRatio="none"
         >
@@ -100,20 +203,22 @@ export function CanvasNodeComponent({
             stroke={borderColor}
             strokeWidth={2}
           />
-          {data.label && (
+          {!editing && (
             <text
               x={vw / 2}
               y={vh / 2}
               textAnchor="middle"
               dominantBaseline="central"
               fill={colorEntry.text}
+              fillOpacity={data.label ? 1 : 0.3}
               fontSize={12}
               style={{ userSelect: "none" }}
             >
-              {data.label}
+              {data.label || "Label..."}
             </text>
           )}
         </svg>
+        {editingOverlay}
       </div>
     )
   }
@@ -129,12 +234,14 @@ export function CanvasNodeComponent({
       `${pad},${vh / 2}`,
     ].join(" ")
     return (
-      <div className="relative" style={{ width: w, height: h }}>
+      <div
+        className="relative w-full h-full"
+        onDoubleClick={onDoubleClick}
+      >
+        {resizer}
         {handles}
         <svg
-          className="absolute inset-0"
-          width="100%"
-          height="100%"
+          style={{ display: "block", width: "100%", height: "100%" }}
           viewBox={`0 0 ${vw} ${vh}`}
           preserveAspectRatio="none"
         >
@@ -144,20 +251,22 @@ export function CanvasNodeComponent({
             stroke={borderColor}
             strokeWidth={2}
           />
-          {data.label && (
+          {!editing && (
             <text
               x={vw / 2}
               y={vh / 2}
               textAnchor="middle"
               dominantBaseline="central"
               fill={colorEntry.text}
+              fillOpacity={data.label ? 1 : 0.3}
               fontSize={12}
               style={{ userSelect: "none" }}
             >
-              {data.label}
+              {data.label || "Label..."}
             </text>
           )}
         </svg>
+        {editingOverlay}
       </div>
     )
   }
@@ -168,12 +277,14 @@ export function CanvasNodeComponent({
     const topY = pad + ry
     const botY = vh - pad - ry
     return (
-      <div className="relative" style={{ width: w, height: h }}>
+      <div
+        className="relative w-full h-full"
+        onDoubleClick={onDoubleClick}
+      >
+        {resizer}
         {handles}
         <svg
-          className="absolute inset-0"
-          width="100%"
-          height="100%"
+          style={{ display: "block", width: "100%", height: "100%" }}
           viewBox={`0 0 ${vw} ${vh}`}
           preserveAspectRatio="none"
         >
@@ -223,20 +334,22 @@ export function CanvasNodeComponent({
             stroke={borderColor}
             strokeWidth={2}
           />
-          {data.label && (
+          {!editing && (
             <text
               x={vw / 2}
               y={(topY + botY) / 2}
               textAnchor="middle"
               dominantBaseline="central"
               fill={colorEntry.text}
+              fillOpacity={data.label ? 1 : 0.3}
               fontSize={12}
               style={{ userSelect: "none" }}
             >
-              {data.label}
+              {data.label || "Label..."}
             </text>
           )}
         </svg>
+        {editingOverlay}
       </div>
     )
   }
@@ -244,10 +357,13 @@ export function CanvasNodeComponent({
   // fallback
   return (
     <div
-      className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs"
+      className="relative flex h-full w-full items-center justify-center rounded-xl border text-xs overflow-hidden"
       style={{ backgroundColor: colorEntry.fill, color: colorEntry.text, borderColor }}
+      onDoubleClick={onDoubleClick}
     >
+      {resizer}
       {handles}
+      {editingOverlay}
       {labelEl}
     </div>
   )
