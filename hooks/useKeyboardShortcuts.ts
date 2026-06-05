@@ -27,7 +27,7 @@ export function useKeyboardShortcuts({
 
       const ctrl = e.ctrlKey || e.metaKey
 
-      if (ctrl && e.shiftKey && e.key === "z") {
+      if (ctrl && e.shiftKey && e.key.toLowerCase() === "z") {
         e.preventDefault()
         onRedo()
         return
@@ -37,7 +37,7 @@ export function useKeyboardShortcuts({
         onRedo()
         return
       }
-      if (ctrl && (e.key === "z" || e.key === "Z")) {
+      if (ctrl && !e.shiftKey && e.key.toLowerCase() === "z") {
         e.preventDefault()
         onUndo()
         return
