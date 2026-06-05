@@ -187,15 +187,13 @@ export function CanvasNodeComponent({
     const pts = `${vw / 2},${pad} ${vw - pad},${vh / 2} ${vw / 2},${vh - pad} ${pad},${vh / 2}`
     return (
       <div
-        className="relative overflow-hidden w-full h-full"
+        className="relative w-full h-full"
         onDoubleClick={onDoubleClick}
       >
         {resizer}
         {handles}
         <svg
-          className="absolute inset-0"
-          width="100%"
-          height="100%"
+          style={{ display: "block", width: "100%", height: "100%" }}
           viewBox={`0 0 ${vw} ${vh}`}
           preserveAspectRatio="none"
         >
@@ -237,15 +235,13 @@ export function CanvasNodeComponent({
     ].join(" ")
     return (
       <div
-        className="relative overflow-hidden w-full h-full"
+        className="relative w-full h-full"
         onDoubleClick={onDoubleClick}
       >
         {resizer}
         {handles}
         <svg
-          className="absolute inset-0"
-          width="100%"
-          height="100%"
+          style={{ display: "block", width: "100%", height: "100%" }}
           viewBox={`0 0 ${vw} ${vh}`}
           preserveAspectRatio="none"
         >
@@ -282,15 +278,13 @@ export function CanvasNodeComponent({
     const botY = vh - pad - ry
     return (
       <div
-        className="relative overflow-hidden w-full h-full"
+        className="relative w-full h-full"
         onDoubleClick={onDoubleClick}
       >
         {resizer}
         {handles}
         <svg
-          className="absolute inset-0"
-          width="100%"
-          height="100%"
+          style={{ display: "block", width: "100%", height: "100%" }}
           viewBox={`0 0 ${vw} ${vh}`}
           preserveAspectRatio="none"
         >
