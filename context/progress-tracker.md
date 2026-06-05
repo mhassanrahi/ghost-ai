@@ -121,6 +121,11 @@ Update this file after every meaningful implementation change.
 - Implemented Feature 15: Node color toolbar (branch: main):
   - `components/editor/canvas-node.tsx` — added `ColorSwatch` helper component (manages own hover state, renders a 16×16 circular swatch with active border + tight glow via `box-shadow`); added `colorToolbar` using `NodeToolbar` from `@xyflow/react` (`position={Position.Top}`, `offset={8}`, `isVisible={selected}`); toolbar is a pill container with 8 swatches from `NODE_COLORS`; `nodrag nopan` + `stopPropagation` on all swatch interactions prevents canvas drag/pan; clicking a swatch calls `updateNodeData(id, { color: fill })`; text color is derived from the fill lookup so both update atomically; all shape branches wrapped in Fragment to include the toolbar
 
+- Implemented Feature 17: Canvas ergonomics (branch: main):
+  - `components/editor/canvas-controls.tsx` — floating pill control bar at `bottom-left`; zoom out / fit view / zoom in buttons wired to `rfInstance` with 300ms animation; undo / redo buttons wired to Liveblocks `useUndo`/`useRedo`; disabled state uses `useCanUndo`/`useCanRedo`; disabled buttons at 30% opacity; thin vertical divider separates zoom and history groups
+  - `hooks/useKeyboardShortcuts.ts` — `useKeyboardShortcuts({ rfInstance, onUndo, onRedo })` hook; listens on `window` `keydown`; skips `input`, `textarea`, and `contentEditable` targets; shortcuts: `+`/`=` zoom in, `-` zoom out, `Ctrl/Cmd+Z` undo, `Ctrl/Cmd+Shift+Z` redo, `Ctrl/Cmd+Y` redo
+  - `components/editor/canvas-flow.tsx` — removed `MiniMap`; imported and called `useKeyboardShortcuts`; mounted `CanvasControls` inside `<ReactFlow>`
+
 - Implemented Feature 16: Edge behavior (branch: nodes-color-toolbar):
   - `types/canvas.ts` — added `label?: string` to `EdgeData`
   - `app/globals.css` — added React Flow handle overrides: 10×10 white circular dots with dark border, `opacity: 0` by default, faded in on `.react-flow__node:hover`, `.selected`, and during active connections

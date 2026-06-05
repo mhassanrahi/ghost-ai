@@ -5,16 +5,18 @@ import {
   ReactFlow,
   Background,
   BackgroundVariant,
-  MiniMap,
   ConnectionMode,
 } from "@xyflow/react"
 import type { ReactFlowInstance } from "@xyflow/react"
+import { useUndo, useRedo, useCanUndo, useCanRedo } from "@liveblocks/react"
 import { useLiveblocksFlow, Cursors } from "@liveblocks/react-flow"
 import type { CanvasNode, CanvasEdge, NodeShape } from "@/types/canvas"
 import { DEFAULT_NODE_COLOR } from "@/types/canvas"
 import { CanvasNodeComponent } from "@/components/editor/canvas-node"
 import { CanvasEdgeComponent } from "@/components/editor/canvas-edge"
 import { ShapePanel } from "@/components/editor/shape-panel"
+import { CanvasControls } from "@/components/editor/canvas-controls"
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import "@xyflow/react/dist/style.css"
 import "@liveblocks/react-ui/styles.css"
 import "@liveblocks/react-flow/styles.css"
@@ -40,6 +42,13 @@ export function CanvasFlow() {
 
   const [rfInstance, setRfInstance] =
     useState<ReactFlowInstance<CanvasNode, CanvasEdge> | null>(null)
+
+  const undo = useUndo()
+  const redo = useRedo()
+  const canUndo = useCanUndo()
+  const canRedo = useCanRedo()
+
+  useKeyboardShortcuts({ rfInstance, onUndo: undo, onRedo: redo })
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -96,9 +105,15 @@ export function CanvasFlow() {
         fitView
       >
         <Background variant={BackgroundVariant.Dots} />
-        <MiniMap />
         <Cursors />
         <ShapePanel />
+        <CanvasControls
+          rfInstance={rfInstance}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+        />
       </ReactFlow>
     </div>
   )
