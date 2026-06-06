@@ -12,6 +12,8 @@ import { RenameProjectDialog } from "@/components/editor/rename-project-dialog"
 import { DeleteProjectDialog } from "@/components/editor/delete-project-dialog"
 import { useProjectActions } from "@/hooks/use-project-actions"
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper"
+import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
+import type { CanvasTemplate } from "@/components/editor/starter-templates"
 
 interface WorkspaceShellProps {
   project: { id: string; name: string }
@@ -28,6 +30,9 @@ export function WorkspaceShell({
 }: WorkspaceShellProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false)
+  const [isTemplatesOpen, setIsTemplatesOpen] = useState(false)
+  const [pendingTemplate, setPendingTemplate] = useState<CanvasTemplate | null>(null)
+
   const {
     activeDialog,
     selectedProject,
@@ -44,6 +49,11 @@ export function WorkspaceShell({
   } = useProjectActions()
   const shareDialog = useShareDialog(project.id)
 
+  const handleTemplateImport = (template: CanvasTemplate) => {
+    setIsTemplatesOpen(false)
+    setPendingTemplate(template)
+  }
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-base">
       <EditorNavbar
@@ -53,6 +63,7 @@ export function WorkspaceShell({
         isAiSidebarOpen={isAiSidebarOpen}
         onToggleAiSidebar={() => setIsAiSidebarOpen((p) => !p)}
         onOpenShare={shareDialog.open}
+        onOpenTemplates={() => setIsTemplatesOpen(true)}
       />
 
       <ProjectSidebar
@@ -68,7 +79,11 @@ export function WorkspaceShell({
 
       <div className="flex flex-1 overflow-hidden pt-12">
         <main className="relative flex-1 overflow-hidden">
-          <CanvasWrapper roomId={project.id} />
+          <CanvasWrapper
+            roomId={project.id}
+            pendingTemplate={pendingTemplate}
+            onTemplateImported={() => setPendingTemplate(null)}
+          />
         </main>
 
         {isAiSidebarOpen && (
@@ -85,6 +100,11 @@ export function WorkspaceShell({
         )}
       </div>
 
+      <StarterTemplatesModal
+        isOpen={isTemplatesOpen}
+        onClose={() => setIsTemplatesOpen(false)}
+        onImport={handleTemplateImport}
+      />
       <ShareDialog
         isOpen={shareDialog.isOpen}
         onClose={shareDialog.close}

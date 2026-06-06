@@ -1,20 +1,23 @@
 "use client"
 
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   ReactFlow,
   Background,
   BackgroundVariant,
-  MiniMap,
   ConnectionMode,
 } from "@xyflow/react"
 import type { ReactFlowInstance } from "@xyflow/react"
+import { useUndo, useRedo, useCanUndo, useCanRedo } from "@liveblocks/react"
 import { useLiveblocksFlow, Cursors } from "@liveblocks/react-flow"
 import type { CanvasNode, CanvasEdge, NodeShape } from "@/types/canvas"
 import { DEFAULT_NODE_COLOR } from "@/types/canvas"
 import { CanvasNodeComponent } from "@/components/editor/canvas-node"
 import { CanvasEdgeComponent } from "@/components/editor/canvas-edge"
 import { ShapePanel } from "@/components/editor/shape-panel"
+import { CanvasControls } from "@/components/editor/canvas-controls"
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
+import type { CanvasTemplate } from "@/components/editor/starter-templates"
 import "@xyflow/react/dist/style.css"
 import "@liveblocks/react-ui/styles.css"
 import "@liveblocks/react-flow/styles.css"
@@ -30,7 +33,12 @@ interface DragShapePayload {
   height: number
 }
 
-export function CanvasFlow() {
+interface CanvasFlowProps {
+  pendingTemplate?: CanvasTemplate | null
+  onTemplateImported?: () => void
+}
+
+export function CanvasFlow({ pendingTemplate, onTemplateImported }: CanvasFlowProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, onDelete } =
     useLiveblocksFlow<CanvasNode, CanvasEdge>({
       suspense: true,
@@ -40,6 +48,48 @@ export function CanvasFlow() {
 
   const [rfInstance, setRfInstance] =
     useState<ReactFlowInstance<CanvasNode, CanvasEdge> | null>(null)
+
+  const undo = useUndo()
+  const redo = useRedo()
+  const canUndo = useCanUndo()
+  const canRedo = useCanRedo()
+
+  useKeyboardShortcuts({ rfInstance, onUndo: undo, onRedo: redo })
+
+  // Refs to read current nodes/edges inside the effect without stale closures
+  const nodesRef = useRef(nodes)
+  const edgesRef = useRef(edges)
+  nodesRef.current = nodes
+  edgesRef.current = edges
+
+  const rfInstanceRef = useRef(rfInstance)
+  rfInstanceRef.current = rfInstance
+
+  useEffect(() => {
+    if (!pendingTemplate) return
+    const currentNodes = nodesRef.current
+    const currentEdges = edgesRef.current
+
+    if (currentNodes.length > 0) {
+      onNodesChange(currentNodes.map((n) => ({ type: "remove" as const, id: n.id })))
+    }
+    if (currentEdges.length > 0) {
+      onEdgesChange(currentEdges.map((e) => ({ type: "remove" as const, id: e.id })))
+    }
+    if (pendingTemplate.nodes.length > 0) {
+      onNodesChange(
+        pendingTemplate.nodes.map((n) => ({ type: "add" as const, item: n })),
+      )
+    }
+    if (pendingTemplate.edges.length > 0) {
+      onEdgesChange(
+        pendingTemplate.edges.map((e) => ({ type: "add" as const, item: e })),
+      )
+    }
+
+    onTemplateImported?.()
+    requestAnimationFrame(() => rfInstanceRef.current?.fitView({ duration: 300 }))
+  }, [pendingTemplate]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const onDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -74,7 +124,7 @@ export function CanvasFlow() {
       }
       onNodesChange([{ type: "add", item: newNode }])
     },
-    [rfInstance, onNodesChange]
+    [rfInstance, onNodesChange],
   )
 
   return (
@@ -96,9 +146,15 @@ export function CanvasFlow() {
         fitView
       >
         <Background variant={BackgroundVariant.Dots} />
-        <MiniMap />
         <Cursors />
         <ShapePanel />
+        <CanvasControls
+          rfInstance={rfInstance}
+          onUndo={undo}
+          onRedo={redo}
+          canUndo={canUndo}
+          canRedo={canRedo}
+        />
       </ReactFlow>
     </div>
   )

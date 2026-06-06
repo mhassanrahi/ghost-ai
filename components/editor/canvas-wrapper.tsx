@@ -7,12 +7,19 @@ import {
 } from "@liveblocks/react"
 import { ErrorBoundary } from "react-error-boundary"
 import { CanvasFlow } from "@/components/editor/canvas-flow"
+import type { CanvasTemplate } from "@/components/editor/starter-templates"
 
 interface CanvasWrapperProps {
   roomId: string
+  pendingTemplate?: CanvasTemplate | null
+  onTemplateImported?: () => void
 }
 
-export function CanvasWrapper({ roomId }: CanvasWrapperProps) {
+export function CanvasWrapper({
+  roomId,
+  pendingTemplate,
+  onTemplateImported,
+}: CanvasWrapperProps) {
   return (
     <LiveblocksProvider authEndpoint="/api/liveblocks-auth">
       <RoomProvider
@@ -22,7 +29,10 @@ export function CanvasWrapper({ roomId }: CanvasWrapperProps) {
         <div className="h-full w-full">
           <ErrorBoundary fallback={<CanvasConnectionError />}>
             <ClientSideSuspense fallback={<CanvasConnecting />}>
-              <CanvasFlow />
+              <CanvasFlow
+                pendingTemplate={pendingTemplate}
+                onTemplateImported={onTemplateImported}
+              />
             </ClientSideSuspense>
           </ErrorBoundary>
         </div>
