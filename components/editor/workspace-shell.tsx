@@ -13,7 +13,9 @@ import { DeleteProjectDialog } from "@/components/editor/delete-project-dialog"
 import { useProjectActions } from "@/hooks/use-project-actions"
 import { CanvasWrapper } from "@/components/editor/canvas-wrapper"
 import { StarterTemplatesModal } from "@/components/editor/starter-templates-modal"
+import { AiSidebar } from "@/components/editor/ai-sidebar"
 import type { CanvasTemplate } from "@/components/editor/starter-templates"
+import type { SaveStatus } from "@/hooks/use-canvas-autosave"
 
 interface WorkspaceShellProps {
   project: { id: string; name: string }
@@ -32,6 +34,7 @@ export function WorkspaceShell({
   const [isAiSidebarOpen, setIsAiSidebarOpen] = useState(false)
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<CanvasTemplate | null>(null)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
 
   const {
     activeDialog,
@@ -64,6 +67,7 @@ export function WorkspaceShell({
         onToggleAiSidebar={() => setIsAiSidebarOpen((p) => !p)}
         onOpenShare={shareDialog.open}
         onOpenTemplates={() => setIsTemplatesOpen(true)}
+        saveStatus={saveStatus}
       />
 
       <ProjectSidebar
@@ -81,24 +85,18 @@ export function WorkspaceShell({
         <main className="relative flex-1 overflow-hidden">
           <CanvasWrapper
             roomId={project.id}
+            projectId={project.id}
             pendingTemplate={pendingTemplate}
             onTemplateImported={() => setPendingTemplate(null)}
+            onSaveStatusChange={setSaveStatus}
           />
         </main>
-
-        {isAiSidebarOpen && (
-          <aside className="flex w-80 shrink-0 flex-col border-l border-surface-border bg-surface">
-            <div className="flex h-12 shrink-0 items-center border-b border-surface-border px-4">
-              <span className="text-sm font-semibold text-copy-primary">
-                AI Assistant
-              </span>
-            </div>
-            <div className="flex flex-1 items-center justify-center">
-              <p className="text-sm text-copy-muted">Coming soon</p>
-            </div>
-          </aside>
-        )}
       </div>
+
+      <AiSidebar
+        isOpen={isAiSidebarOpen}
+        onClose={() => setIsAiSidebarOpen(false)}
+      />
 
       <StarterTemplatesModal
         isOpen={isTemplatesOpen}
