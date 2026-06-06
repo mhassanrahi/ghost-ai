@@ -21,7 +21,9 @@ export async function GET(_request: Request, { params }: Context) {
     return Response.json(null, { status: 404 })
   }
 
-  const blobResponse = await fetch(record.canvasJsonPath)
+  const blobResponse = await fetch(record.canvasJsonPath, {
+    headers: { authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` },
+  })
   if (!blobResponse.ok) {
     return Response.json({ error: "Failed to fetch canvas snapshot" }, { status: 502 })
   }
@@ -57,7 +59,7 @@ export async function PUT(request: Request, { params }: Context) {
   const blob = await put(
     `canvas/${projectId}/canvas.json`,
     JSON.stringify(body),
-    { access: "public", contentType: "application/json", allowOverwrite: true },
+    { access: "private", contentType: "application/json", allowOverwrite: true },
   )
 
   await prisma.project.update({
