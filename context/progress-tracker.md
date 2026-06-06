@@ -140,13 +140,32 @@ Update this file after every meaningful implementation change.
   - `components/editor/canvas-edge.tsx` — new `CanvasEdgeComponent` registered as `canvasEdge` type; uses `getSmoothStepPath` for right-angle routing; wide (20px) transparent hitbox path overlaid on a thin (1.5px) visible path for easy clicking; per-edge SVG `<marker>` defs (dim `#808090` / bright `#f0f0f4`) switched on hover or selection; `EdgeLabelRenderer` positions label at path midpoint (`labelX`/`labelY` from `getSmoothStepPath`); double-click opens a `ch`-width auto-growing input; blur/Enter/Escape commit via `updateEdgeData` → `onEdgesChange` → Liveblocks sync; saved labels shown as pill badges; faint "Add label…" hint shown on active unlabeled edges; all label interactions carry `nodrag nopan` + `stopPropagation`
   - `components/editor/canvas-flow.tsx` — added `edgeTypes = { canvasEdge: CanvasEdgeComponent }` and `defaultEdgeOptions = { type: "canvasEdge", data: {} }`; both wired into `<ReactFlow>` so all new connections use the custom renderer
 
+- Implemented Feature 20: AI sidebar shell (branch: main):
+  - `components/editor/ai-sidebar.tsx` — new dedicated client component; floating fixed-right panel with 200ms slide-in/out transition via `translate-x`; header with `Bot` icon, "AI Workspace" title, "Collaborate with Ghost AI" subtitle, and close button; shadcn `Tabs` with "AI Architect" and "Specs" tabs using `bg-ai/10 text-ai-text` active styling; AI Architect tab: empty state with bot icon, description, and 3 starter chips (`bg-subtle text-ai-text`), scrollable message list with right-aligned user bubbles (`bg-accent-dim border-brand/50`) and left-aligned assistant bubbles (`bg-elevated border-surface-border text-ai-text`), auto-resizing `Textarea` (min 72px / max 160px), Enter-to-send / Shift+Enter-for-newline; Specs tab: "Generate Spec" button (`bg-ai text-white`), static demo spec card (`bg-elevated rounded-2xl`) with file icon, title, snippet, and disabled Download button
+  - `components/editor/workspace-shell.tsx` — removed inline `<aside>` AI sidebar placeholder; imported and mounted `<AiSidebar isOpen={isAiSidebarOpen} onClose={...} />` as a floating overlay alongside other sidebar components
+
+- Implemented Feature 21: Canvas autosave (branch: main):
+  - `@vercel/blob` installed; `BLOB_READ_WRITE_TOKEN` already present in `.env.local`
+  - `app/api/projects/[projectId]/canvas/route.ts` — GET reads `Project.canvasJsonPath` from Prisma and fetches the JSON from Vercel Blob; PUT uploads canvas JSON to Vercel Blob (`canvas/{projectId}/canvas.json`, `allowOverwrite: true`) and updates `canvasJsonPath` in Prisma; both endpoints enforce Clerk auth and project accessibility
+  - `hooks/use-canvas-autosave.ts` — exports `SaveStatus` type (`idle | saving | saved | error`) and `useCanvasAutosave` hook; watches nodes/edges, debounces 2 s, skips when `enabled = false` or no user edits have occurred; reads latest nodes/edges via refs to avoid stale closures
+  - `components/editor/canvas-flow.tsx` — added `projectId` and `onSaveStatusChange` props; `hasUserEdited` ref set by `handleNodesChange`/`handleEdgesChange` wrappers (gates autosave); mount-once effect checks room emptiness: if empty fetches GET canvas and loads it via `onNodesChange`/`onEdgesChange`, then sets `saveEnabled = true`; template import sets `hasUserEdited = true`; save status propagated via `onSaveStatusChange` callback
+  - `components/editor/canvas-wrapper.tsx` — added `projectId` and `onSaveStatusChange` props, threaded to `CanvasFlow`
+  - `components/editor/workspace-shell.tsx` — added `saveStatus` state; passes `projectId` and `onSaveStatusChange` to `CanvasWrapper`; passes `saveStatus` to `EditorNavbar`
+  - `components/editor/editor-navbar.tsx` — added `saveStatus?: SaveStatus` prop; renders `Loader2`/`Check`/`AlertCircle` icon + label in center section (next to project name) when status is not `idle`
+
+- Implemented Feature 19: Presence avatars and live cursors (branch: main):
+  - `liveblocks.config.ts` — renamed `isThinking` to `thinking` in Presence type to match spec
+  - `components/editor/canvas-wrapper.tsx` — updated `initialPresence` to use `thinking: false`
+  - `components/editor/presence-avatars.tsx` — new component rendered as a React Flow `Panel position="top-right"` inside the canvas; uses `useOthers()` filtered by the current Clerk `userId` (from `useAuth()`) to exclude own connections; shows up to 5 collaborator avatars in an overlapping stack with `ring-2` for readability, profile photo or colored initials fallback; `+N` overflow chip when more than 5; vertical divider only when at least one collaborator is present; Clerk `UserButton` always shown last
+  - `components/editor/canvas-flow.tsx` — added `LiveCursor` component using `useOther(connectionId, o => o.info)` to render a colored SVG pointer + name badge pill per participant; `cursorComponents` constant wires it into `<Cursors components={cursorComponents} />`; `<PresenceAvatars />` mounted inside `<ReactFlow>` children; cursor broadcasting is handled automatically by the Liveblocks `Cursors` component (reads/writes `presence.cursor` in React Flow canvas coordinates)
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 19 (check context/feature-specs/ for next spec)
+- Feature 22 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
