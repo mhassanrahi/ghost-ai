@@ -122,7 +122,7 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
     try {
       pushMessage({
         id: `user-${Date.now()}`,
-        sender: senderName,
+        sender: senderName ?? "You",
         role: "user",
         content: trimmed,
         timestamp: Date.now(),
