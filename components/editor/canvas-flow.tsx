@@ -6,9 +6,10 @@ import {
   Background,
   BackgroundVariant,
   ConnectionMode,
+  Panel,
 } from "@xyflow/react"
 import type { ReactFlowInstance, NodeChange, EdgeChange } from "@xyflow/react"
-import { useUndo, useRedo, useCanUndo, useCanRedo, useOther } from "@liveblocks/react"
+import { useUndo, useRedo, useCanUndo, useCanRedo, useOther, useEventListener } from "@liveblocks/react"
 import { useLiveblocksFlow, Cursors } from "@liveblocks/react-flow"
 import type { CursorsCursorProps } from "@liveblocks/react-flow"
 import { PresenceAvatars } from "@/components/editor/presence-avatars"
@@ -22,6 +23,8 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { useCanvasAutosave } from "@/hooks/use-canvas-autosave"
 import type { SaveStatus } from "@/hooks/use-canvas-autosave"
 import type { CanvasTemplate } from "@/components/editor/starter-templates"
+import { Bot } from "lucide-react"
+import { cn } from "@/lib/utils"
 import "@xyflow/react/dist/style.css"
 import "@liveblocks/react-ui/styles.css"
 import "@liveblocks/react-flow/styles.css"
@@ -105,10 +108,20 @@ export function CanvasFlow({
 
   useKeyboardShortcuts({ rfInstance, onUndo: undo, onRedo: redo })
 
+  useEventListener(({ event }) => {
+    const e = event as { type: string; status: string; message: string }
+    if (e.type !== "AI_STATUS") return
+    setAiStatus({ message: e.message, variant: e.status === "error" ? "error" : "info" })
+    if (e.status === "complete" || e.status === "error") {
+      setTimeout(() => setAiStatus(null), 3000)
+    }
+  })
+
   // Tracks whether the user has made any edits after mount — gates autosave
   const hasUserEdited = useRef(false)
   // Becomes true once the initial room-empty check + optional blob load finishes
   const [saveEnabled, setSaveEnabled] = useState(false)
+  const [aiStatus, setAiStatus] = useState<{ message: string; variant: "info" | "error" } | null>(null)
 
   // Refs to read current values inside effects without stale closures
   const nodesRef = useRef(nodes)
@@ -272,6 +285,22 @@ export function CanvasFlow({
           canUndo={canUndo}
           canRedo={canRedo}
         />
+        {aiStatus && (
+          <Panel position="top-center">
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-full px-4 py-2 text-xs shadow-lg backdrop-blur-sm",
+                "border bg-elevated/95",
+                aiStatus.variant === "error"
+                  ? "border-state-error/30 text-state-error"
+                  : "border-surface-border text-copy-primary"
+              )}
+            >
+              <Bot className="h-3 w-3 text-ai-text" />
+              {aiStatus.message}
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
     </div>
   )
