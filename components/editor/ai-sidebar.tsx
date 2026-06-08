@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Bot, X, Download, FileText, Send, Loader2 } from "lucide-react"
 import { useRealtimeRun } from "@trigger.dev/react-hooks"
+import type { designAgentTask } from "@/trigger/design-agent"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
@@ -47,7 +48,7 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const { run } = useRealtimeRun(activeRun?.id, {
+  const { run, error: runError } = useRealtimeRun<typeof designAgentTask>(activeRun?.id, {
     accessToken: activeRun?.token ?? "",
     enabled: !!activeRun,
     stopOnCompletion: true,
@@ -62,7 +63,8 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
       run.status === "CRASHED" ||
       run.status === "SYSTEM_FAILURE" ||
       run.status === "EXPIRED" ||
-      run.status === "TIMED_OUT"
+      run.status === "TIMED_OUT" ||
+      run.status === "PENDING_VERSION"
     if (!isTerminal) return
 
     const content =
@@ -77,6 +79,18 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
     )
     setActiveRun(null)
   }, [run?.status]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!runError || !activeRun) return
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === activeRun.messageId
+          ? { ...m, content: "Connection error. Please try again.", isThinking: false }
+          : m
+      )
+    )
+    setActiveRun(null)
+  }, [runError]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendMessage = async () => {
     const trimmed = draft.trim()
@@ -223,8 +237,7 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
                       "max-w-[85%] rounded-xl px-3 py-2 text-xs",
                       msg.role === "user"
                         ? "border-2 border-brand/50 bg-accent-dim text-copy-primary"
-                        : "border border-surface-border bg-elevated text-ai-text",
-                      msg.isThinking && "animate-pulse"
+                        : "border border-surface-border bg-elevated text-ai-text"
                     )}
                   >
                     {msg.isThinking ? (
