@@ -1,6 +1,10 @@
 import { task, metadata } from "@trigger.dev/sdk"
 import { generateObject } from "ai"
-import { google } from "@ai-sdk/google"
+import { createGoogleGenerativeAI } from "@ai-sdk/google"
+
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY,
+})
 import { z } from "zod"
 import { mutateFlow } from "@liveblocks/react-flow/node"
 import liveblocks from "@/lib/liveblocks"
