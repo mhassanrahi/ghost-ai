@@ -170,6 +170,7 @@ export const designAgentTask = task({
               id: n.id,
               label: n.data.label,
               shape: n.data.shape,
+              color: n.data.color,
               position: n.position,
             })),
             edges: currentEdges.map((e) => ({
@@ -231,19 +232,20 @@ export const designAgentTask = task({
 
       return { success: true }
     } catch (error) {
-      await liveblocks.broadcastEvent(roomId, {
-        type: "AI_STATUS",
-        status: "error",
-        message: "Something went wrong. Please try again.",
-      })
-      await metadata.set("status", "Error")
-
-      await liveblocks.setPresence(roomId, {
-        userId: AI_USER_ID,
-        data: { cursor: null, thinking: false },
-        userInfo: AI_USER_INFO,
-        ttl: 2,
-      })
+      await Promise.allSettled([
+        liveblocks.broadcastEvent(roomId, {
+          type: "AI_STATUS",
+          status: "error",
+          message: "Something went wrong. Please try again.",
+        }),
+        liveblocks.setPresence(roomId, {
+          userId: AI_USER_ID,
+          data: { cursor: null, thinking: false },
+          userInfo: AI_USER_INFO,
+          ttl: 2,
+        }),
+      ])
+      try { metadata.set("status", "Error") } catch { /* ignore */ }
 
       throw error
     }
