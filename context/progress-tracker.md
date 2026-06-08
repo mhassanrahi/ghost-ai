@@ -173,13 +173,27 @@ Update this file after every meaningful implementation change.
   - `components/editor/workspace-shell.tsx` — passes `projectId` and `roomId` to `AiSidebar`
   - `package.json` — added `zod` as direct dependency
 
+- Implemented Feature 24: AI Presence State (branch: trigger-dev):
+  - `types/tasks.ts` — `AiStatusFeedPayloadSchema` (Zod) + `AiStatusFeedPayload` type; validates incoming feed messages
+  - `liveblocks.config.ts` — added `"ai-status-feed": AiStatusFeedPayload | null` to `Storage` type
+  - `components/editor/workspace-shell.tsx` — moved `LiveblocksProvider` + `RoomProvider` here (with `initialStorage: { "ai-status-feed": null }`); both `CanvasFlow` and `AiSidebar` now share one room context
+  - `components/editor/canvas-wrapper.tsx` — removed providers and `roomId` prop; now only wraps `CanvasFlow` in `ErrorBoundary` + `ClientSideSuspense`
+  - `components/editor/canvas-flow.tsx` — `useMutation` writes to `ai-status-feed` when `AI_STATUS` room events arrive (clears to null on complete/error); `LiveCursor` shows `Loader2` spinner in name badge when `presence.thinking` is true
+  - `components/editor/ai-sidebar.tsx` — `useStorage` subscribes to `ai-status-feed`; validates payload with `AiStatusFeedPayloadSchema`; `isGenerating` combines local `isSubmitting`/`activeRun` with shared feed status; header subtitle shows live feed text + spinner; textarea disabled and placeholder updated when shared generation is active; send button shows spinner when submitting
+
+- Implemented Feature 25: Sidebar Chat Feed (branch: trigger-dev):
+  - `types/tasks.ts` — added `AiChatMessageSchema` (Zod, fields: id, sender, role, content, timestamp) + `AiChatMessage` type
+  - `liveblocks.config.ts` — added `"ai-chat": LiveList<AiChatMessage>` to `Storage` type; separate from `ai-status-feed`
+  - `components/editor/workspace-shell.tsx` — imported `LiveList` from `@liveblocks/client`; added `"ai-chat": new LiveList([])` to `RoomProvider` `initialStorage`
+  - `components/editor/ai-sidebar.tsx` — replaced local `messages` state with `useStorage` on `ai-chat`; validates each message via `AiChatMessageSchema.safeParse` before rendering; `pushMessage` mutation appends to `ai-chat`; sender name read from `useSelf`; user messages pushed to feed on send; AI responses pushed on run completion/error; thinking state stays local (transient); `ChatMessage` helper renders sender, timestamp, and bubble per message; `sendError` banner shown on failures
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 24 (check context/feature-specs/ for next spec)
+- Check context/feature-specs/ for next spec
 
 ## Open Questions
 
