@@ -159,13 +159,19 @@ Update this file after every meaningful implementation change.
   - `components/editor/presence-avatars.tsx` — new component rendered as a React Flow `Panel position="top-right"` inside the canvas; uses `useOthers()` filtered by the current Clerk `userId` (from `useAuth()`) to exclude own connections; shows up to 5 collaborator avatars in an overlapping stack with `ring-2` for readability, profile photo or colored initials fallback; `+N` overflow chip when more than 5; vertical divider only when at least one collaborator is present; Clerk `UserButton` always shown last
   - `components/editor/canvas-flow.tsx` — added `LiveCursor` component using `useOther(connectionId, o => o.info)` to render a colored SVG pointer + name badge pill per participant; `cursorComponents` constant wires it into `<Cursors components={cursorComponents} />`; `<PresenceAvatars />` mounted inside `<ReactFlow>` children; cursor broadcasting is handled automatically by the Liveblocks `Cursors` component (reads/writes `presence.cursor` in React Flow canvas coordinates)
 
+- Implemented Feature 22: Design Agent API (branch: trigger-dev):
+  - `prisma/models/task-run.prisma` — `TaskRun` model (`runId` unique, `projectId`, `userId`, `createdAt`); index on `runId`, compound index on `userId`+`projectId`; migration `20260608111446_add_task_runs` applied
+  - `trigger/design-agent.ts` — minimal `design-agent` task stub; accepts `{ prompt, roomId }`; logs payload and returns `{ received: true }`; no AI logic
+  - `app/api/ai/design/route.ts` — `POST /api/ai/design`; requires auth; validates `prompt`, `roomId`, `projectId`; verifies project access via `getProjectIfAccessible`; triggers `design-agent` task via `tasks.trigger`; persists `TaskRun` record; returns `{ runId }`
+  - `app/api/ai/design/token/route.ts` — `POST /api/ai/design/token`; requires auth; accepts `{ runId }`; verifies `TaskRun` ownership; issues run-scoped public access token via `triggerAuth.createPublicToken`; returns `{ token }`
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 22 (check context/feature-specs/ for next spec)
+- Feature 23 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
