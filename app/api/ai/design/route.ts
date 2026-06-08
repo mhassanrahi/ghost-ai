@@ -54,13 +54,21 @@ export async function POST(request: Request) {
     },
   });
 
-  const publicToken = await triggerAuth.createPublicToken({
-    scopes: {
-      read: {
-        runs: [handle.id],
+  let publicToken: string;
+  try {
+    publicToken = await triggerAuth.createPublicToken({
+      scopes: {
+        read: {
+          runs: [handle.id],
+        },
       },
-    },
-  });
+    });
+  } catch {
+    return Response.json(
+      { error: "Failed to create public token", runId: handle.id },
+      { status: 500 }
+    );
+  }
 
   return Response.json({ runId: handle.id, publicToken }, { status: 201 });
 }
