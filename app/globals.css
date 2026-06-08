@@ -66,6 +66,7 @@
     --color-error: var(--state-error);
     --color-success: var(--state-success);
     --color-warning: var(--state-warning);
+    --color-accent-green: var(--accent-green);
 }
 
 /* Non-layered: beats all @layer styles, fixes dark-only text inheritance in Base UI */
@@ -129,6 +130,7 @@ select {
         --state-error: #ff4d4f;
         --state-success: #34d399;
         --state-warning: #fbbf24;
+        --accent-green: #62c073;
     }
 
     * {
