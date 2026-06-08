@@ -187,6 +187,11 @@ Update this file after every meaningful implementation change.
   - `components/editor/workspace-shell.tsx` — imported `LiveList` from `@liveblocks/client`; added `"ai-chat": new LiveList([])` to `RoomProvider` `initialStorage`
   - `components/editor/ai-sidebar.tsx` — replaced local `messages` state with `useStorage` on `ai-chat`; validates each message via `AiChatMessageSchema.safeParse` before rendering; `pushMessage` mutation appends to `ai-chat`; sender name read from `useSelf`; user messages pushed to feed on send; AI responses pushed on run completion/error; thinking state stays local (transient); `ChatMessage` helper renders sender, timestamp, and bubble per message; `sendError` banner shown on failures
 
+- Implemented Feature 26: Design Agent Frontend (branch: trigger-dev):
+  - `app/globals.css` — added `--accent-green: #62c073` raw token + `--color-accent-green` Tailwind mapping
+  - `app/api/ai/design/route.ts` — generates public Trigger.dev token in same handler and returns `{ runId, publicToken }` in a single response; wraps `createPublicToken` in try/catch that returns `{ error, runId }` on failure so client can fall back to the token endpoint
+  - `components/editor/ai-sidebar.tsx` — `sendMessage` reads `{ runId, publicToken }` from one API call; user bubbles styled `bg-accent-green text-copy-primary`; submit button uses `bg-accent-green text-copy-primary`; compact `isFeedActive` status strip (animated green dot + feed text) added above input; 500+runId partial failure handled gracefully
+
 ## In Progress
 
 - None
