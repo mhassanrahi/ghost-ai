@@ -1,15 +1,16 @@
 import { task, metadata } from "@trigger.dev/sdk"
 import { generateObject } from "ai"
-import { createGoogleGenerativeAI } from "@ai-sdk/google"
-
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GEMINI_API_KEY,
-})
+import { createOpenAI } from "@ai-sdk/openai"
 import { z } from "zod"
 import { mutateFlow } from "@liveblocks/react-flow/node"
 import liveblocks from "@/lib/liveblocks"
 import { NODE_SHAPES, NODE_COLORS, DEFAULT_NODE_COLOR } from "@/types/canvas"
 import type { CanvasNode, CanvasEdge } from "@/types/canvas"
+
+const openrouter = createOpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPEN_ROUTER_API_KEY,
+})
 
 const AI_USER_ID = "ghost-ai"
 const AI_USER_INFO = { name: "Ghost AI", avatar: "", color: "#6457f9" }
@@ -185,7 +186,7 @@ export const designAgentTask = task({
           })
 
           const { object } = await generateObject({
-            model: google("gemini-2.0-flash"),
+            model: openrouter(process.env.OPEN_ROUTER_MODEL!),
             schema: CanvasDesignSchema,
             system: buildSystemPrompt(currentStateJson),
             prompt,
