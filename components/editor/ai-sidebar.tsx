@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Bot, X, Download, FileText, Send } from "lucide-react"
+import { Bot, X, Download, FileText, Send, Loader2 } from "lucide-react"
+import { useRealtimeRun } from "@trigger.dev/react-hooks"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
@@ -11,11 +12,14 @@ interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+  isThinking?: boolean
 }
 
 interface AiSidebarProps {
   isOpen: boolean
   onClose: () => void
+  projectId: string
+  roomId: string
 }
 
 const STARTER_PROMPTS = [
@@ -24,9 +28,11 @@ const STARTER_PROMPTS = [
   "Build a CI/CD pipeline",
 ]
 
-export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
+export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [draft, setDraft] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeRun, setActiveRun] = useState<{ id: string; token: string; messageId: string } | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -41,19 +47,86 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const sendMessage = () => {
-    if (!draft.trim()) return
+  const { run } = useRealtimeRun(activeRun?.id, {
+    accessToken: activeRun?.token ?? "",
+    enabled: !!activeRun,
+    stopOnCompletion: true,
+  })
+
+  useEffect(() => {
+    if (!run || !activeRun) return
+    const isTerminal =
+      run.status === "COMPLETED" ||
+      run.status === "FAILED" ||
+      run.status === "CANCELED" ||
+      run.status === "CRASHED" ||
+      run.status === "SYSTEM_FAILURE" ||
+      run.status === "EXPIRED" ||
+      run.status === "TIMED_OUT"
+    if (!isTerminal) return
+
+    const content =
+      run.status === "COMPLETED"
+        ? "Your design has been applied to the canvas."
+        : "Something went wrong generating the design. Please try again."
+
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === activeRun.messageId ? { ...m, content, isThinking: false } : m
+      )
+    )
+    setActiveRun(null)
+  }, [run?.status]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const sendMessage = async () => {
+    const trimmed = draft.trim()
+    if (!trimmed || isSubmitting) return
+
+    const thinkingId = `thinking-${Date.now()}`
+
     setMessages((prev) => [
       ...prev,
-      { id: Date.now().toString(), role: "user", content: draft.trim() },
+      { id: `user-${Date.now()}`, role: "user", content: trimmed },
+      { id: thinkingId, role: "assistant", content: "Designing…", isThinking: true },
     ])
     setDraft("")
+    setIsSubmitting(true)
+
+    try {
+      const designRes = await fetch("/api/ai/design", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: trimmed, roomId, projectId }),
+      })
+      if (!designRes.ok) throw new Error("Design request failed")
+      const { runId } = (await designRes.json()) as { runId: string }
+
+      const tokenRes = await fetch("/api/ai/design/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ runId }),
+      })
+      if (!tokenRes.ok) throw new Error("Token request failed")
+      const { token } = (await tokenRes.json()) as { token: string }
+
+      setActiveRun({ id: runId, token, messageId: thinkingId })
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === thinkingId
+            ? { ...m, content: "Failed to start the design task. Please try again.", isThinking: false }
+            : m
+        )
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
-      sendMessage()
+      void sendMessage()
     }
   }
 
@@ -150,10 +223,18 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
                       "max-w-[85%] rounded-xl px-3 py-2 text-xs",
                       msg.role === "user"
                         ? "border-2 border-brand/50 bg-accent-dim text-copy-primary"
-                        : "border border-surface-border bg-elevated text-ai-text"
+                        : "border border-surface-border bg-elevated text-ai-text",
+                      msg.isThinking && "animate-pulse"
                     )}
                   >
-                    {msg.content}
+                    {msg.isThinking ? (
+                      <span className="flex items-center gap-1.5">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        {msg.content}
+                      </span>
+                    ) : (
+                      msg.content
+                    )}
                   </div>
                 </div>
               ))
@@ -174,8 +255,8 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
                 rows={1}
               />
               <Button
-                onClick={sendMessage}
-                disabled={!draft.trim()}
+                onClick={() => void sendMessage()}
+                disabled={!draft.trim() || isSubmitting || !!activeRun}
                 className="h-8 self-end bg-ai px-3 text-xs text-white hover:bg-ai/90"
               >
                 <Send className="mr-1 h-3 w-3" />
