@@ -1,4 +1,4 @@
-import { tasks } from "@trigger.dev/sdk/v3";
+import { tasks, auth as triggerAuth } from "@trigger.dev/sdk/v3";
 import prisma from "@/lib/prisma";
 import { getCurrentUser, getProjectIfAccessible } from "@/lib/project-access";
 import type { designAgentTask } from "@/trigger/design-agent";
@@ -54,5 +54,13 @@ export async function POST(request: Request) {
     },
   });
 
-  return Response.json({ runId: handle.id }, { status: 201 });
+  const publicToken = await triggerAuth.createPublicToken({
+    scopes: {
+      read: {
+        runs: [handle.id],
+      },
+    },
+  });
+
+  return Response.json({ runId: handle.id, publicToken }, { status: 201 });
 }
