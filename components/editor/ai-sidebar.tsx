@@ -143,17 +143,12 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
         body: JSON.stringify({ prompt: trimmed, roomId, projectId }),
       })
       if (!designRes.ok) throw new Error("Design request failed")
-      const { runId } = (await designRes.json()) as { runId: string }
+      const { runId, publicToken } = (await designRes.json()) as {
+        runId: string
+        publicToken: string
+      }
 
-      const tokenRes = await fetch("/api/ai/design/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ runId }),
-      })
-      if (!tokenRes.ok) throw new Error("Token request failed")
-      const { token } = (await tokenRes.json()) as { token: string }
-
-      setActiveRun({ id: runId, token })
+      setActiveRun({ id: runId, token: publicToken })
     } catch {
       pushMessage({
         id: `ai-fail-${Date.now()}`,
@@ -291,6 +286,16 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
             </div>
           )}
 
+          {/* Status strip — visible only while AI is generating */}
+          {isFeedActive && (
+            <div className="flex shrink-0 items-center gap-2 border-t border-surface-border bg-base px-3 py-2">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-green" />
+              <span className="truncate text-xs text-accent-green">
+                {sharedFeed?.text ?? "AI is working…"}
+              </span>
+            </div>
+          )}
+
           {/* Input area */}
           <div className="shrink-0 border-t border-surface-border p-3">
             <div className="flex flex-col gap-2">
@@ -311,7 +316,7 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
               <Button
                 onClick={() => void sendMessage()}
                 disabled={!draft.trim() || isGenerating}
-                className="h-8 self-end bg-ai px-3 text-xs text-white hover:bg-ai/90"
+                className="h-8 self-end bg-accent-green px-3 text-xs text-base hover:bg-accent-green/90 disabled:opacity-40"
               >
                 {isSubmitting || !!activeRun ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -383,7 +388,7 @@ function ChatMessage({ message }: { message: AiChatMessage }) {
         className={cn(
           "max-w-[85%] rounded-xl px-3 py-2 text-xs",
           message.role === "user"
-            ? "border-2 border-brand/50 bg-accent-dim text-copy-primary"
+            ? "bg-accent-green text-base font-medium"
             : "border border-surface-border bg-elevated text-ai-text"
         )}
       >
