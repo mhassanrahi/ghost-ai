@@ -142,13 +142,21 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: trimmed, roomId, projectId }),
       })
-      if (!designRes.ok) throw new Error("Design request failed")
-      const { runId, publicToken } = (await designRes.json()) as {
-        runId: string
-        publicToken: string
+      const designBody = (await designRes.json()) as {
+        runId?: string
+        publicToken?: string
+        error?: string
       }
 
-      setActiveRun({ id: runId, token: publicToken })
+      if (designBody.runId && !designBody.publicToken) {
+        // Task started but token generation failed — cannot track in real time
+        setThinkingMessage(false)
+        setSendError("Task started but live tracking unavailable. Canvas will update shortly.")
+        return
+      }
+      if (!designRes.ok) throw new Error(designBody.error ?? "Design request failed")
+
+      setActiveRun({ id: designBody.runId!, token: designBody.publicToken! })
     } catch {
       pushMessage({
         id: `ai-fail-${Date.now()}`,
@@ -316,7 +324,7 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId }: AiSidebarProps
               <Button
                 onClick={() => void sendMessage()}
                 disabled={!draft.trim() || isGenerating}
-                className="h-8 self-end bg-accent-green px-3 text-xs text-base hover:bg-accent-green/90 disabled:opacity-40"
+                className="h-8 self-end bg-accent-green px-3 text-xs text-copy-primary hover:bg-accent-green/90 disabled:opacity-40"
               >
                 {isSubmitting || !!activeRun ? (
                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -388,7 +396,7 @@ function ChatMessage({ message }: { message: AiChatMessage }) {
         className={cn(
           "max-w-[85%] rounded-xl px-3 py-2 text-xs",
           message.role === "user"
-            ? "bg-accent-green text-base font-medium"
+            ? "bg-accent-green text-copy-primary font-medium"
             : "border border-surface-border bg-elevated text-ai-text"
         )}
       >
