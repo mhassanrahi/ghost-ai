@@ -161,9 +161,17 @@ Update this file after every meaningful implementation change.
 
 - Implemented Feature 22: Design Agent API (branch: trigger-dev):
   - `prisma/models/task-run.prisma` — `TaskRun` model (`runId` unique, `projectId`, `userId`, `createdAt`); index on `runId`, compound index on `userId`+`projectId`; migration `20260608111446_add_task_runs` applied
-  - `trigger/design-agent.ts` — minimal `design-agent` task stub; accepts `{ prompt, roomId }`; logs payload and returns `{ received: true }`; no AI logic
+  - `trigger/design-agent.ts` — minimal `design-agent` task stub; accepts `{ prompt, roomId }`; logs payload and returns `{ received: true }`; no AI logic (superseded by Feature 23)
   - `app/api/ai/design/route.ts` — `POST /api/ai/design`; requires auth; validates `prompt`, `roomId`, `projectId`; verifies project access via `getProjectIfAccessible`; triggers `design-agent` task via `tasks.trigger`; persists `TaskRun` record; returns `{ runId }`
   - `app/api/ai/design/token/route.ts` — `POST /api/ai/design/token`; requires auth; accepts `{ runId }`; verifies `TaskRun` ownership; issues run-scoped public access token via `triggerAuth.createPublicToken`; returns `{ token }`
+
+- Implemented Feature 23: Design Agent Logic (branch: trigger-dev):
+  - `liveblocks.config.ts` — added `RoomEvent: { type: "AI_STATUS"; status: "start" | "processing" | "complete" | "error"; message: string }` for typed broadcasts
+  - `trigger/design-agent.ts` — full AI agent: uses `@ai-sdk/google` Gemini 2.0 Flash + `generateObject` with structured Zod schema (7 action types: add/move/resize/update/delete node, add/delete edge); applies operations via `mutateFlow` from `@liveblocks/react-flow/node`; sets AI presence (`ghost-ai` user, `thinking: true`, TTL 120s) at start, clears on completion/error; broadcasts typed `AI_STATUS` room events at start/processing/complete/error; updates Trigger.dev run metadata at each step; error path uses `Promise.allSettled` for resilient cleanup
+  - `components/editor/canvas-flow.tsx` — added `useEventListener` for `AI_STATUS` room events; renders a `<Panel position="top-center">` toast overlay visible to all room participants; auto-dismisses on complete/error with `useRef`-tracked timer and cleanup effect
+  - `components/editor/ai-sidebar.tsx` — full rewrite: added `projectId`/`roomId` props; `sendMessage` now calls `POST /api/ai/design` then `POST /api/ai/design/token`; uses `useRealtimeRun<typeof designAgentTask>` with inline access token for per-user run tracking; `isThinking` message state shows `Loader2` spinner; covers all terminal `RunStatus` values including `PENDING_VERSION`; `runError` effect prevents permanent spinner lock on SSE failures
+  - `components/editor/workspace-shell.tsx` — passes `projectId` and `roomId` to `AiSidebar`
+  - `package.json` — added `zod` as direct dependency
 
 ## In Progress
 
@@ -171,7 +179,7 @@ Update this file after every meaningful implementation change.
 
 ## Next Up
 
-- Feature 23 (check context/feature-specs/ for next spec)
+- Feature 24 (check context/feature-specs/ for next spec)
 
 ## Open Questions
 
