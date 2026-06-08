@@ -106,14 +106,17 @@ export function CanvasFlow({
   const canUndo = useCanUndo()
   const canRedo = useCanRedo()
 
+  const [aiStatus, setAiStatus] = useState<{ message: string; variant: "info" | "error" } | null>(null)
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useKeyboardShortcuts({ rfInstance, onUndo: undo, onRedo: redo })
 
   useEventListener(({ event }) => {
-    const e = event as { type: string; status: string; message: string }
-    if (e.type !== "AI_STATUS") return
-    setAiStatus({ message: e.message, variant: e.status === "error" ? "error" : "info" })
-    if (e.status === "complete" || e.status === "error") {
-      setTimeout(() => setAiStatus(null), 3000)
+    if (event.type !== "AI_STATUS") return
+    if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    setAiStatus({ message: event.message, variant: event.status === "error" ? "error" : "info" })
+    if (event.status === "complete" || event.status === "error") {
+      dismissTimer.current = setTimeout(() => setAiStatus(null), 3000)
     }
   })
 
@@ -121,7 +124,6 @@ export function CanvasFlow({
   const hasUserEdited = useRef(false)
   // Becomes true once the initial room-empty check + optional blob load finishes
   const [saveEnabled, setSaveEnabled] = useState(false)
-  const [aiStatus, setAiStatus] = useState<{ message: string; variant: "info" | "error" } | null>(null)
 
   // Refs to read current values inside effects without stale closures
   const nodesRef = useRef(nodes)
@@ -179,6 +181,12 @@ export function CanvasFlow({
         setSaveEnabled(true)
       })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    return () => {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    }
+  }, [])
 
   const { saveStatus } = useCanvasAutosave({
     nodes,
