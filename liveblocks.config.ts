@@ -16,8 +16,7 @@ declare global {
       };
     };
 
-    RoomEvent:
-      | { type: "AI_STATUS"; status: "start" | "processing" | "complete" | "error"; message: string };
+    RoomEvent: { type: "AI_STATUS"; status: "start" | "processing" | "complete" | "error"; message: string };
 
     ThreadMetadata: {};
 
