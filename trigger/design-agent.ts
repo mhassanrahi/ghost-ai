@@ -7,6 +7,12 @@ import liveblocks from "@/lib/liveblocks"
 import { NODE_SHAPES, NODE_COLORS, DEFAULT_NODE_COLOR } from "@/types/canvas"
 import type { CanvasNode, CanvasEdge } from "@/types/canvas"
 
+if (!process.env.OPEN_ROUTER_API_KEY) {
+  throw new Error("OPEN_ROUTER_API_KEY environment variable is required")
+}
+if (!process.env.OPEN_ROUTER_MODEL) {
+  throw new Error("OPEN_ROUTER_MODEL environment variable is required")
+}
 const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
   apiKey: process.env.OPEN_ROUTER_API_KEY,
@@ -123,6 +129,15 @@ function buildSystemPrompt(currentStateJson: string): string {
 - Use descriptive kebab-case: "api-gateway", "user-service", "postgres-db"
 - Edge IDs: "edge-{source}-{target}"
 
+## Edges
+Edges are mandatory. They show data flow, API calls, events, and dependencies between components.
+- API call / HTTP request: connect client → gateway → service
+- Database read/write: connect service → database
+- Event / message: connect producer → broker → consumer
+- Auth check: connect service → auth service
+- Every node (except standalone monitoring/logging) must have at least one edge
+- Add a short label to edges where it clarifies the interaction (e.g., "HTTP", "SQL", "publish", "subscribe", "JWT verify")
+
 ## Current Canvas
 ${currentStateJson}
 
@@ -131,7 +146,9 @@ ${currentStateJson}
 - Modify existing nodes only if the user explicitly requests changes to them
 - Every edge must reference node IDs that exist in the canvas after your actions
 - Produce at least 3 nodes for any architecture request
-- Use the most semantically appropriate shape and color for each component`
+- Produce at least N−1 edges for N nodes — every component must be reachable
+- Use the most semantically appropriate shape and color for each component
+- A response with nodes but no edges is invalid and incomplete`
 }
 
 // ── Task ─────────────────────────────────────────────────────────────────────
