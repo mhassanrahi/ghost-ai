@@ -17,7 +17,7 @@ export default defineConfig({
     default: {
       maxAttempts: 3,
       minTimeoutInMs: 1000,
-      maxTimeoutInMs: 1000,
+      maxTimeoutInMs: 8000,
       factor: 2
     }
   }
