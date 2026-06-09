@@ -1,3 +1,6 @@
+import type { AiStatusFeedPayload, AiChatMessage } from "@/types/tasks"
+import type { LiveList } from "@liveblocks/client"
+
 declare global {
   interface Liveblocks {
     Presence: {
@@ -5,7 +8,10 @@ declare global {
       thinking: boolean;
     };
 
-    Storage: {};
+    Storage: {
+      "ai-status-feed": AiStatusFeedPayload | null;
+      "ai-chat": LiveList<AiChatMessage>;
+    };
 
     UserMeta: {
       id: string;
@@ -16,7 +22,7 @@ declare global {
       };
     };
 
-    RoomEvent: {};
+    RoomEvent: { type: "AI_STATUS"; status: "start" | "processing" | "complete" | "error"; message: string };
 
     ThreadMetadata: {};
 

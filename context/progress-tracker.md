@@ -159,13 +159,51 @@ Update this file after every meaningful implementation change.
   - `components/editor/presence-avatars.tsx` — new component rendered as a React Flow `Panel position="top-right"` inside the canvas; uses `useOthers()` filtered by the current Clerk `userId` (from `useAuth()`) to exclude own connections; shows up to 5 collaborator avatars in an overlapping stack with `ring-2` for readability, profile photo or colored initials fallback; `+N` overflow chip when more than 5; vertical divider only when at least one collaborator is present; Clerk `UserButton` always shown last
   - `components/editor/canvas-flow.tsx` — added `LiveCursor` component using `useOther(connectionId, o => o.info)` to render a colored SVG pointer + name badge pill per participant; `cursorComponents` constant wires it into `<Cursors components={cursorComponents} />`; `<PresenceAvatars />` mounted inside `<ReactFlow>` children; cursor broadcasting is handled automatically by the Liveblocks `Cursors` component (reads/writes `presence.cursor` in React Flow canvas coordinates)
 
+- Implemented Feature 22: Design Agent API (branch: trigger-dev):
+  - `prisma/models/task-run.prisma` — `TaskRun` model (`runId` unique, `projectId`, `userId`, `createdAt`); index on `runId`, compound index on `userId`+`projectId`; migration `20260608111446_add_task_runs` applied
+  - `trigger/design-agent.ts` — minimal `design-agent` task stub; accepts `{ prompt, roomId }`; logs payload and returns `{ received: true }`; no AI logic (superseded by Feature 23)
+  - `app/api/ai/design/route.ts` — `POST /api/ai/design`; requires auth; validates `prompt`, `roomId`, `projectId`; verifies project access via `getProjectIfAccessible`; triggers `design-agent` task via `tasks.trigger`; persists `TaskRun` record; returns `{ runId }`
+  - `app/api/ai/design/token/route.ts` — `POST /api/ai/design/token`; requires auth; accepts `{ runId }`; verifies `TaskRun` ownership; issues run-scoped public access token via `triggerAuth.createPublicToken`; returns `{ token }`
+
+- Implemented Feature 23: Design Agent Logic (branch: trigger-dev):
+  - `liveblocks.config.ts` — added `RoomEvent: { type: "AI_STATUS"; status: "start" | "processing" | "complete" | "error"; message: string }` for typed broadcasts
+  - `trigger/design-agent.ts` — full AI agent: uses `@ai-sdk/google` Gemini 2.0 Flash + `generateObject` with structured Zod schema (7 action types: add/move/resize/update/delete node, add/delete edge); applies operations via `mutateFlow` from `@liveblocks/react-flow/node`; sets AI presence (`ghost-ai` user, `thinking: true`, TTL 120s) at start, clears on completion/error; broadcasts typed `AI_STATUS` room events at start/processing/complete/error; updates Trigger.dev run metadata at each step; error path uses `Promise.allSettled` for resilient cleanup
+  - `components/editor/canvas-flow.tsx` — added `useEventListener` for `AI_STATUS` room events; renders a `<Panel position="top-center">` toast overlay visible to all room participants; auto-dismisses on complete/error with `useRef`-tracked timer and cleanup effect
+  - `components/editor/ai-sidebar.tsx` — full rewrite: added `projectId`/`roomId` props; `sendMessage` now calls `POST /api/ai/design` then `POST /api/ai/design/token`; uses `useRealtimeRun<typeof designAgentTask>` with inline access token for per-user run tracking; `isThinking` message state shows `Loader2` spinner; covers all terminal `RunStatus` values including `PENDING_VERSION`; `runError` effect prevents permanent spinner lock on SSE failures
+  - `components/editor/workspace-shell.tsx` — passes `projectId` and `roomId` to `AiSidebar`
+  - `package.json` — added `zod` as direct dependency
+
+- Implemented Feature 24: AI Presence State (branch: trigger-dev):
+  - `types/tasks.ts` — `AiStatusFeedPayloadSchema` (Zod) + `AiStatusFeedPayload` type; validates incoming feed messages
+  - `liveblocks.config.ts` — added `"ai-status-feed": AiStatusFeedPayload | null` to `Storage` type
+  - `components/editor/workspace-shell.tsx` — moved `LiveblocksProvider` + `RoomProvider` here (with `initialStorage: { "ai-status-feed": null }`); both `CanvasFlow` and `AiSidebar` now share one room context
+  - `components/editor/canvas-wrapper.tsx` — removed providers and `roomId` prop; now only wraps `CanvasFlow` in `ErrorBoundary` + `ClientSideSuspense`
+  - `components/editor/canvas-flow.tsx` — `useMutation` writes to `ai-status-feed` when `AI_STATUS` room events arrive (clears to null on complete/error); `LiveCursor` shows `Loader2` spinner in name badge when `presence.thinking` is true
+  - `components/editor/ai-sidebar.tsx` — `useStorage` subscribes to `ai-status-feed`; validates payload with `AiStatusFeedPayloadSchema`; `isGenerating` combines local `isSubmitting`/`activeRun` with shared feed status; header subtitle shows live feed text + spinner; textarea disabled and placeholder updated when shared generation is active; send button shows spinner when submitting
+
+- Implemented Feature 25: Sidebar Chat Feed (branch: trigger-dev):
+  - `types/tasks.ts` — added `AiChatMessageSchema` (Zod, fields: id, sender, role, content, timestamp) + `AiChatMessage` type
+  - `liveblocks.config.ts` — added `"ai-chat": LiveList<AiChatMessage>` to `Storage` type; separate from `ai-status-feed`
+  - `components/editor/workspace-shell.tsx` — imported `LiveList` from `@liveblocks/client`; added `"ai-chat": new LiveList([])` to `RoomProvider` `initialStorage`
+  - `components/editor/ai-sidebar.tsx` — replaced local `messages` state with `useStorage` on `ai-chat`; validates each message via `AiChatMessageSchema.safeParse` before rendering; `pushMessage` mutation appends to `ai-chat`; sender name read from `useSelf`; user messages pushed to feed on send; AI responses pushed on run completion/error; thinking state stays local (transient); `ChatMessage` helper renders sender, timestamp, and bubble per message; `sendError` banner shown on failures
+
+- Implemented Feature 27: Spec Generation Flow (branch: trigger-dev):
+  - `trigger/generate-spec.ts` — `generateSpecTask` task; validates input with Zod (`projectId`, `roomId`, `chatHistory`, `nodes`, `edges`); builds a structured prompt from canvas state and conversation history; calls Gemini 2.0 Flash via `@ai-sdk/google` `generateText`; updates run metadata at each step (Analyzing → Generating → Complete); returns `{ spec: markdownContent }`
+  - `app/api/ai/spec/route.ts` — `POST /api/ai/spec`; requires Clerk auth (401); accepts `roomId`, `chatHistory`, `nodes`, `edges`; resolves `projectId` from `roomId` via `getProjectIfAccessible` (never trusts client-supplied projectId); triggers `generate-spec` task; persists `TaskRun` record; returns `{ runId }`
+  - `app/api/ai/spec/token/route.ts` — `POST /api/ai/spec/token`; requires Clerk auth; accepts `runId`; verifies `TaskRun` ownership; issues 1-hour Trigger.dev public access token scoped to that run; returns `{ token }`
+
+- Implemented Feature 26: Design Agent Frontend (branch: trigger-dev):
+  - `app/globals.css` — added `--accent-green: #62c073` raw token + `--color-accent-green` Tailwind mapping
+  - `app/api/ai/design/route.ts` — generates public Trigger.dev token in same handler and returns `{ runId, publicToken }` in a single response; wraps `createPublicToken` in try/catch that returns `{ error, runId }` on failure so client can fall back to the token endpoint
+  - `components/editor/ai-sidebar.tsx` — `sendMessage` reads `{ runId, publicToken }` from one API call; user bubbles styled `bg-accent-green text-copy-primary`; submit button uses `bg-accent-green text-copy-primary`; compact `isFeedActive` status strip (animated green dot + feed text) added above input; 500+runId partial failure handled gracefully
+
 ## In Progress
 
 - None
 
 ## Next Up
 
-- Feature 22 (check context/feature-specs/ for next spec)
+- Check context/feature-specs/ for next spec
 
 ## Open Questions
 

@@ -6,9 +6,10 @@ import {
   Background,
   BackgroundVariant,
   ConnectionMode,
+  Panel,
 } from "@xyflow/react"
 import type { ReactFlowInstance, NodeChange, EdgeChange } from "@xyflow/react"
-import { useUndo, useRedo, useCanUndo, useCanRedo, useOther } from "@liveblocks/react"
+import { useUndo, useRedo, useCanUndo, useCanRedo, useOther, useEventListener, useMutation } from "@liveblocks/react"
 import { useLiveblocksFlow, Cursors } from "@liveblocks/react-flow"
 import type { CursorsCursorProps } from "@liveblocks/react-flow"
 import { PresenceAvatars } from "@/components/editor/presence-avatars"
@@ -22,6 +23,8 @@ import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts"
 import { useCanvasAutosave } from "@/hooks/use-canvas-autosave"
 import type { SaveStatus } from "@/hooks/use-canvas-autosave"
 import type { CanvasTemplate } from "@/components/editor/starter-templates"
+import { Bot, Loader2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 import "@xyflow/react/dist/style.css"
 import "@liveblocks/react-ui/styles.css"
 import "@liveblocks/react-flow/styles.css"
@@ -33,6 +36,7 @@ let nodeCounter = 0
 
 function LiveCursor({ connectionId }: CursorsCursorProps) {
   const info = useOther(connectionId, (o) => o.info)
+  const thinking = useOther(connectionId, (o) => o.presence.thinking)
   if (!info) return null
 
   return (
@@ -53,10 +57,11 @@ function LiveCursor({ connectionId }: CursorsCursorProps) {
         />
       </svg>
       <div
-        className="mt-0.5 max-w-[120px] truncate rounded-full px-2 py-0.5 text-[11px] font-medium leading-tight text-white"
+        className="mt-0.5 flex max-w-[120px] items-center gap-1 truncate rounded-full px-2 py-0.5 text-[11px] font-medium leading-tight text-white"
         style={{ backgroundColor: info.color }}
       >
-        {info.name}
+        <span className="truncate">{info.name}</span>
+        {thinking && <Loader2 className="h-2.5 w-2.5 shrink-0 animate-spin" />}
       </div>
     </div>
   )
@@ -103,7 +108,29 @@ export function CanvasFlow({
   const canUndo = useCanUndo()
   const canRedo = useCanRedo()
 
+  const [aiStatus, setAiStatus] = useState<{ message: string; variant: "info" | "error" } | null>(null)
+  const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const writeFeedStatus = useMutation(
+    ({ storage }, payload: { status: string; text?: string } | null) => {
+      storage.set("ai-status-feed", payload)
+    },
+    [],
+  )
+
   useKeyboardShortcuts({ rfInstance, onUndo: undo, onRedo: redo })
+
+  useEventListener(({ event }) => {
+    if (event.type !== "AI_STATUS") return
+    if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    setAiStatus({ message: event.message, variant: event.status === "error" ? "error" : "info" })
+    if (event.status === "complete" || event.status === "error") {
+      dismissTimer.current = setTimeout(() => setAiStatus(null), 3000)
+      writeFeedStatus(null)
+    } else {
+      writeFeedStatus({ status: event.status, text: event.message })
+    }
+  })
 
   // Tracks whether the user has made any edits after mount — gates autosave
   const hasUserEdited = useRef(false)
@@ -166,6 +193,12 @@ export function CanvasFlow({
         setSaveEnabled(true)
       })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    return () => {
+      if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    }
+  }, [])
 
   const { saveStatus } = useCanvasAutosave({
     nodes,
@@ -272,6 +305,22 @@ export function CanvasFlow({
           canUndo={canUndo}
           canRedo={canRedo}
         />
+        {aiStatus && (
+          <Panel position="top-center">
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-full px-4 py-2 text-xs shadow-lg backdrop-blur-sm",
+                "border bg-elevated/95",
+                aiStatus.variant === "error"
+                  ? "border-state-error/30 text-state-error"
+                  : "border-surface-border text-copy-primary"
+              )}
+            >
+              <Bot className="h-3 w-3 text-ai-text" />
+              {aiStatus.message}
+            </div>
+          </Panel>
+        )}
       </ReactFlow>
     </div>
   )
