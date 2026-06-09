@@ -209,6 +209,9 @@ export const designAgentTask = task({
             prompt,
           })
 
+          const existingNodeIds = new Set(currentNodes.map((n) => n.id))
+          const existingEdgeIds = new Set(currentEdges.map((e) => e.id))
+
           for (const action of object.actions) {
             switch (action.type) {
               case "add_node":
@@ -224,13 +227,21 @@ export const designAgentTask = task({
                 flow.updateNodeData(action.id, action.data)
                 break
               case "delete_node":
-                flow.removeNode(action.id)
+                if (existingNodeIds.has(action.id)) {
+                  flow.removeNode(action.id)
+                  existingNodeIds.delete(action.id)
+                }
                 break
               case "add_edge":
-                flow.addEdge(buildEdge(action.edge))
+                if (flow.getNode(action.edge.source) && flow.getNode(action.edge.target)) {
+                  flow.addEdge(buildEdge(action.edge))
+                }
                 break
               case "delete_edge":
-                flow.removeEdge(action.id)
+                if (existingEdgeIds.has(action.id)) {
+                  flow.removeEdge(action.id)
+                  existingEdgeIds.delete(action.id)
+                }
                 break
             }
           }
