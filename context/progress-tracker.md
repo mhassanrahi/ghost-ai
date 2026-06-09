@@ -192,6 +192,18 @@ Update this file after every meaningful implementation change.
   - `app/api/ai/spec/route.ts` — `POST /api/ai/spec`; requires Clerk auth (401); accepts `roomId`, `chatHistory`, `nodes`, `edges`; resolves `projectId` from `roomId` via `getProjectIfAccessible` (never trusts client-supplied projectId); triggers `generate-spec` task; persists `TaskRun` record; returns `{ runId }`
   - `app/api/ai/spec/token/route.ts` — `POST /api/ai/spec/token`; requires Clerk auth; accepts `runId`; verifies `TaskRun` ownership; issues 1-hour Trigger.dev public access token scoped to that run; returns `{ token }`
 
+- Implemented Feature 29: Spec UI Integration (branch: main):
+  - `app/api/projects/[projectId]/specs/route.ts` — GET lists all `ProjectSpec` records for the authenticated user's project, ordered by `createdAt` desc; 401 for unauthenticated, 403 for inaccessible project
+  - `components/editor/spec-preview-modal.tsx` — shadcn `Dialog`; fetches spec content via the existing download endpoint on open; renders Markdown with `react-markdown` + `remark-gfm`; download action via programmatic anchor click; close via X button or Escape
+  - `components/editor/ai-sidebar.tsx` — Specs tab replaced: fetches real spec list when tab activates; scrollable compact list of `SpecListItem` rows (filename derived from `filePath`, formatted date, hover-reveal download button); clicking a row opens `SpecPreviewModal`; loading and empty states handled; `Generate Spec` static placeholder removed
+
+- Implemented Feature 28: Spec Persistence & Download (branch: main):
+  - `prisma/models/spec.prisma` — `ProjectSpec` model (`id`, `projectId`, `filePath`, `createdAt`; cascade-delete on project removal; index on `projectId`); migration `20260609141329_add_project_specs` applied
+  - `prisma/models/project.prisma` — added `specs ProjectSpec[]` relation to `Project`
+  - `trigger/generate-spec.ts` — after `generateText`, uploads Markdown to Vercel Blob at `specs/{projectId}/{timestamp}.md` (private, `text/markdown`); creates `ProjectSpec` record; returns `{ spec: text, specId: record.id }`
+  - `app/api/projects/[projectId]/specs/[specId]/download/route.ts` — `GET`; requires Clerk auth (401); verifies project access via `getProjectIfAccessible` (403); fetches `ProjectSpec` by specId (404); cross-checks `spec.projectId === projectId` (403); fetches blob with auth header; returns content as `text/markdown` attachment (`Content-Disposition: attachment; filename="spec-{specId}.md"`)
+  - `components/editor/canvas-flow.tsx` — fixed pre-existing TypeScript error: tightened `writeFeedStatus` mutation parameter from `{ status: string }` to `AiStatusFeedPayload | null`
+
 - Implemented Feature 26: Design Agent Frontend (branch: trigger-dev):
   - `app/globals.css` — added `--accent-green: #62c073` raw token + `--color-accent-green` Tailwind mapping
   - `app/api/ai/design/route.ts` — generates public Trigger.dev token in same handler and returns `{ runId, publicToken }` in a single response; wraps `createPublicToken` in try/catch that returns `{ error, runId }` on failure so client can fall back to the token endpoint
