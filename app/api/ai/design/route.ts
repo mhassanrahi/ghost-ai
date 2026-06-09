@@ -46,14 +46,6 @@ export async function POST(request: Request) {
     roomId,
   });
 
-  await prisma.taskRun.create({
-    data: {
-      runId: handle.id,
-      projectId,
-      userId: user.userId,
-    },
-  });
-
   let publicToken: string;
   try {
     publicToken = await triggerAuth.createPublicToken({
@@ -69,6 +61,14 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+
+  await prisma.taskRun.create({
+    data: {
+      runId: handle.id,
+      projectId,
+      userId: user.userId,
+    },
+  });
 
   return Response.json({ runId: handle.id, publicToken }, { status: 201 });
 }
