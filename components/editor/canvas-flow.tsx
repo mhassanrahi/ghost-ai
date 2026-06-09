@@ -14,6 +14,7 @@ import { useLiveblocksFlow, Cursors } from "@liveblocks/react-flow"
 import type { CursorsCursorProps } from "@liveblocks/react-flow"
 import { PresenceAvatars } from "@/components/editor/presence-avatars"
 import type { CanvasNode, CanvasEdge, NodeShape } from "@/types/canvas"
+import type { AiStatusFeedPayload } from "@/types/tasks"
 import { DEFAULT_NODE_COLOR } from "@/types/canvas"
 import { CanvasNodeComponent } from "@/components/editor/canvas-node"
 import { CanvasEdgeComponent } from "@/components/editor/canvas-edge"
@@ -80,6 +81,7 @@ interface CanvasFlowProps {
   pendingTemplate?: CanvasTemplate | null
   onTemplateImported?: () => void
   onSaveStatusChange?: (status: SaveStatus) => void
+  onRegisterStateGetter?: (getter: () => { nodes: unknown[]; edges: unknown[] }) => void
 }
 
 interface CanvasData {
@@ -92,6 +94,7 @@ export function CanvasFlow({
   pendingTemplate,
   onTemplateImported,
   onSaveStatusChange,
+  onRegisterStateGetter,
 }: CanvasFlowProps) {
   const { nodes, edges, onNodesChange, onEdgesChange, onConnect, onDelete } =
     useLiveblocksFlow<CanvasNode, CanvasEdge>({
@@ -112,7 +115,7 @@ export function CanvasFlow({
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const writeFeedStatus = useMutation(
-    ({ storage }, payload: { status: string; text?: string } | null) => {
+    ({ storage }, payload: AiStatusFeedPayload | null) => {
       storage.set("ai-status-feed", payload)
     },
     [],
@@ -145,6 +148,10 @@ export function CanvasFlow({
 
   const rfInstanceRef = useRef(rfInstance)
   rfInstanceRef.current = rfInstance
+
+  useEffect(() => {
+    onRegisterStateGetter?.(() => ({ nodes: nodesRef.current, edges: edgesRef.current }))
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Wrap user-facing handlers so we know when the user makes edits
   const handleNodesChange = useCallback(
