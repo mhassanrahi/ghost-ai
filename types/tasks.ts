@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 export const AiStatusFeedPayloadSchema = z.object({
-  status: z.string(),
+  status: z.enum(["start", "processing", "complete", "error"]),
   text: z.string().optional(),
 })
 
