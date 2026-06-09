@@ -33,13 +33,22 @@ export async function POST(request: Request) {
     return Response.json({ error: "Run not found" }, { status: 404 });
   }
 
-  const token = await triggerAuth.createPublicToken({
-    scopes: {
-      read: {
-        runs: [runId],
+  let token: string;
+  try {
+    token = await triggerAuth.createPublicToken({
+      scopes: {
+        read: {
+          runs: [runId],
+        },
       },
-    },
-  });
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return Response.json(
+      { error: "Failed to create public token", runId, detail: message },
+      { status: 500 }
+    );
+  }
 
   return Response.json({ token });
 }
