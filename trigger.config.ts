@@ -3,6 +3,10 @@ import { config } from "dotenv";
 
 config({ path: ".env.local" });
 
+if (!process.env.TRIGGER_PROJECT_ID) {
+  throw new Error("TRIGGER_PROJECT_ID environment variable is required");
+}
+
 export default defineConfig({
   project: process.env.TRIGGER_PROJECT_ID!,
   dirs: ["./trigger"],
