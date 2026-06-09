@@ -187,6 +187,11 @@ Update this file after every meaningful implementation change.
   - `components/editor/workspace-shell.tsx` — imported `LiveList` from `@liveblocks/client`; added `"ai-chat": new LiveList([])` to `RoomProvider` `initialStorage`
   - `components/editor/ai-sidebar.tsx` — replaced local `messages` state with `useStorage` on `ai-chat`; validates each message via `AiChatMessageSchema.safeParse` before rendering; `pushMessage` mutation appends to `ai-chat`; sender name read from `useSelf`; user messages pushed to feed on send; AI responses pushed on run completion/error; thinking state stays local (transient); `ChatMessage` helper renders sender, timestamp, and bubble per message; `sendError` banner shown on failures
 
+- Implemented Feature 27: Spec Generation Flow (branch: trigger-dev):
+  - `trigger/generate-spec.ts` — `generateSpecTask` task; validates input with Zod (`projectId`, `roomId`, `chatHistory`, `nodes`, `edges`); builds a structured prompt from canvas state and conversation history; calls Gemini 2.0 Flash via `@ai-sdk/google` `generateText`; updates run metadata at each step (Analyzing → Generating → Complete); returns `{ spec: markdownContent }`
+  - `app/api/ai/spec/route.ts` — `POST /api/ai/spec`; requires Clerk auth (401); accepts `roomId`, `chatHistory`, `nodes`, `edges`; resolves `projectId` from `roomId` via `getProjectIfAccessible` (never trusts client-supplied projectId); triggers `generate-spec` task; persists `TaskRun` record; returns `{ runId }`
+  - `app/api/ai/spec/token/route.ts` — `POST /api/ai/spec/token`; requires Clerk auth; accepts `runId`; verifies `TaskRun` ownership; issues 1-hour Trigger.dev public access token scoped to that run; returns `{ token }`
+
 - Implemented Feature 26: Design Agent Frontend (branch: trigger-dev):
   - `app/globals.css` — added `--accent-green: #62c073` raw token + `--color-accent-green` Tailwind mapping
   - `app/api/ai/design/route.ts` — generates public Trigger.dev token in same handler and returns `{ runId, publicToken }` in a single response; wraps `createPublicToken` in try/catch that returns `{ error, runId }` on failure so client can fall back to the token endpoint
