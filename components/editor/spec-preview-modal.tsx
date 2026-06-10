@@ -34,18 +34,29 @@ export function SpecPreviewModal({
 
   useEffect(() => {
     if (!isOpen || !specId) return
+    const controller = new AbortController()
     setContent(null)
     setError(null)
     setIsLoading(true)
 
-    fetch(`/api/projects/${projectId}/specs/${specId}/download`)
+    fetch(`/api/projects/${projectId}/specs/${specId}/download`, {
+      signal: controller.signal,
+    })
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load spec (${res.status})`)
         return res.text()
       })
-      .then((text) => setContent(text))
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setIsLoading(false))
+      .then((text) => {
+        if (!controller.signal.aborted) setContent(text)
+      })
+      .catch((err: Error) => {
+        if (!controller.signal.aborted) setError(err.message)
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setIsLoading(false)
+      })
+
+    return () => controller.abort()
   }, [isOpen, specId, projectId])
 
   const handleDownload = () => {
