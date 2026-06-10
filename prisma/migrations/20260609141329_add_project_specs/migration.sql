@@ -1,4 +1,6 @@
 -- DropIndex
+-- task_runs_run_id_idx (non-unique) is superseded by the unique constraint
+-- task_runs_run_id_key added via @unique on run_id; duplicate index removed.
 DROP INDEX "task_runs_run_id_idx";
 
 -- CreateTable
