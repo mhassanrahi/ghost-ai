@@ -97,7 +97,7 @@ export function WorkspaceShell({
                 pendingTemplate={pendingTemplate}
                 onTemplateImported={() => setPendingTemplate(null)}
                 onSaveStatusChange={setSaveStatus}
-                onRegisterStateGetter={(getter) => { canvasStateGetterRef.current = getter }}
+                onRegisterStateGetter={(getter) => { canvasStateGetterRef.current = getter ?? null }}
               />
             </main>
           </div>
