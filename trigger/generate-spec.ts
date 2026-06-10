@@ -1,7 +1,8 @@
 import { task, metadata } from "@trigger.dev/sdk"
 import { generateText } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
-import { put } from "@vercel/blob"
+import { put, del } from "@vercel/blob"
+import { randomUUID } from "crypto"
 import { z } from "zod"
 import prisma from "@/lib/prisma"
 
@@ -125,15 +126,23 @@ export const generateSpecTask = task({
 
     await metadata.set("status", "Saving…")
 
+    const specId = randomUUID()
+
     const blob = await put(
-      `specs/${projectId}/${Date.now()}.md`,
+      `specs/${projectId}/${specId}.md`,
       text,
       { access: "private", contentType: "text/markdown", allowOverwrite: false },
     )
 
-    const record = await prisma.projectSpec.create({
-      data: { projectId, filePath: blob.url },
-    })
+    let record: { id: string }
+    try {
+      record = await prisma.projectSpec.create({
+        data: { id: specId, projectId, filePath: blob.url },
+      })
+    } catch (dbErr) {
+      await del(blob.url)
+      throw dbErr
+    }
 
     await metadata.set("status", "Complete")
 
