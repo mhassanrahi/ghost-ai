@@ -11,7 +11,7 @@ interface CanvasWrapperProps {
   pendingTemplate?: CanvasTemplate | null
   onTemplateImported?: () => void
   onSaveStatusChange?: (status: SaveStatus) => void
-  onRegisterStateGetter?: (getter: () => { nodes: unknown[]; edges: unknown[] }) => void
+  onRegisterStateGetter?: (getter: (() => { nodes: unknown[]; edges: unknown[] }) | undefined) => void
 }
 
 export function CanvasWrapper({
