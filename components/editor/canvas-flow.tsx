@@ -81,7 +81,7 @@ interface CanvasFlowProps {
   pendingTemplate?: CanvasTemplate | null
   onTemplateImported?: () => void
   onSaveStatusChange?: (status: SaveStatus) => void
-  onRegisterStateGetter?: (getter: () => { nodes: unknown[]; edges: unknown[] }) => void
+  onRegisterStateGetter?: (getter: (() => { nodes: unknown[]; edges: unknown[] }) | undefined) => void
 }
 
 interface CanvasData {
@@ -149,9 +149,18 @@ export function CanvasFlow({
   const rfInstanceRef = useRef(rfInstance)
   rfInstanceRef.current = rfInstance
 
+  // Keep a stable ref to the callback so the effect below can depend only on
+  // saveEnabled (the hydration signal) without re-running on every parent render.
+  const onRegisterStateGetterRef = useRef(onRegisterStateGetter)
+  onRegisterStateGetterRef.current = onRegisterStateGetter
+
   useEffect(() => {
-    onRegisterStateGetter?.(() => ({ nodes: nodesRef.current, edges: edgesRef.current }))
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!saveEnabled) return
+    onRegisterStateGetterRef.current?.(() => ({ nodes: nodesRef.current, edges: edgesRef.current }))
+    return () => {
+      onRegisterStateGetterRef.current?.(undefined)
+    }
+  }, [saveEnabled])
 
   // Wrap user-facing handlers so we know when the user makes edits
   const handleNodesChange = useCallback(
