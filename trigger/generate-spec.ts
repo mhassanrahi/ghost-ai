@@ -147,7 +147,7 @@ export const generateSpecTask = task({
       }
       throw dbErr
     }
-    }
+
 
     await metadata.set("status", "Complete")
 
