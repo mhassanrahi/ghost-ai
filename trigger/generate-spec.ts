@@ -1,7 +1,23 @@
 import { task, metadata } from "@trigger.dev/sdk"
 import { generateText } from "ai"
-import { google } from "@ai-sdk/google"
+import { createOpenAI } from "@ai-sdk/openai"
+import { put, del } from "@vercel/blob"
+import { randomUUID } from "crypto"
 import { z } from "zod"
+import prisma from "@/lib/prisma"
+
+if (!process.env.OPEN_ROUTER_API_KEY) {
+  throw new Error("OPEN_ROUTER_API_KEY environment variable is required")
+}
+
+if (!process.env.OPEN_ROUTER_MODEL) {
+  throw new Error("OPEN_ROUTER_MODEL environment variable is required")
+}
+
+const openrouter = createOpenAI({
+  baseURL: "https://openrouter.ai/api/v1",
+  apiKey: process.env.OPEN_ROUTER_API_KEY,
+})
 
 // ── Zod schemas ──────────────────────────────────────────────────────────────
 
@@ -95,7 +111,7 @@ export const generateSpecTask = task({
   id: "generate-spec",
   run: async (rawPayload: unknown) => {
     const payload = GenerateSpecPayloadSchema.parse(rawPayload)
-    const { chatHistory, nodes, edges } = payload
+    const { projectId, chatHistory, nodes, edges } = payload
 
     await metadata.set("status", "Analyzing canvas…")
 
@@ -104,12 +120,37 @@ export const generateSpecTask = task({
     await metadata.set("status", "Generating specification…")
 
     const { text } = await generateText({
-      model: google("gemini-2.0-flash"),
+      model: openrouter(process.env.OPEN_ROUTER_MODEL!),
       prompt,
     })
 
+    await metadata.set("status", "Saving…")
+
+    const specId = randomUUID()
+
+    const blob = await put(
+      `specs/${projectId}/${specId}.md`,
+      text,
+      { access: "private", contentType: "text/markdown", allowOverwrite: false },
+    )
+
+    let record: { id: string }
+    try {
+      record = await prisma.projectSpec.create({
+        data: { id: specId, projectId, filePath: blob.url },
+      })
+    } catch (dbErr) {
+      try {
+        await del(blob.url)
+      } catch (delErr) {
+        console.error("Failed to clean up blob after DB error:", delErr)
+      }
+      throw dbErr
+    }
+    }
+
     await metadata.set("status", "Complete")
 
-    return { spec: text }
+    return { spec: text, specId: record.id }
   },
 })

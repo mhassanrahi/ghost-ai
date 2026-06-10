@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { LiveblocksProvider, RoomProvider } from "@liveblocks/react"
 import { LiveList } from "@liveblocks/client"
 
@@ -37,6 +37,7 @@ export function WorkspaceShell({
   const [isTemplatesOpen, setIsTemplatesOpen] = useState(false)
   const [pendingTemplate, setPendingTemplate] = useState<CanvasTemplate | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle")
+  const canvasStateGetterRef = useRef<(() => { nodes: unknown[]; edges: unknown[] }) | null>(null)
 
   const {
     activeDialog,
@@ -96,6 +97,7 @@ export function WorkspaceShell({
                 pendingTemplate={pendingTemplate}
                 onTemplateImported={() => setPendingTemplate(null)}
                 onSaveStatusChange={setSaveStatus}
+                onRegisterStateGetter={(getter) => { canvasStateGetterRef.current = getter ?? null }}
               />
             </main>
           </div>
@@ -105,6 +107,7 @@ export function WorkspaceShell({
             onClose={() => setIsAiSidebarOpen(false)}
             projectId={project.id}
             roomId={project.id}
+            getCanvasState={() => canvasStateGetterRef.current?.() ?? { nodes: [], edges: [] }}
           />
 
           <StarterTemplatesModal

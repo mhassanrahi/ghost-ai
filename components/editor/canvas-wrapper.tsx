@@ -11,6 +11,7 @@ interface CanvasWrapperProps {
   pendingTemplate?: CanvasTemplate | null
   onTemplateImported?: () => void
   onSaveStatusChange?: (status: SaveStatus) => void
+  onRegisterStateGetter?: (getter: (() => { nodes: unknown[]; edges: unknown[] }) | undefined) => void
 }
 
 export function CanvasWrapper({
@@ -18,6 +19,7 @@ export function CanvasWrapper({
   pendingTemplate,
   onTemplateImported,
   onSaveStatusChange,
+  onRegisterStateGetter,
 }: CanvasWrapperProps) {
   return (
     <div className="h-full w-full">
@@ -28,6 +30,7 @@ export function CanvasWrapper({
             pendingTemplate={pendingTemplate}
             onTemplateImported={onTemplateImported}
             onSaveStatusChange={onSaveStatusChange}
+            onRegisterStateGetter={onRegisterStateGetter}
           />
         </ClientSideSuspense>
       </ErrorBoundary>
