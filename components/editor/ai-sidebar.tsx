@@ -56,6 +56,7 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId, getCanvasState }
   const [activeTab, setActiveTab] = useState("architect")
   const [specs, setSpecs] = useState<ProjectSpec[]>([])
   const [isLoadingSpecs, setIsLoadingSpecs] = useState(false)
+  const [specsError, setSpecsError] = useState<string | null>(null)
   const [previewSpec, setPreviewSpec] = useState<ProjectSpec | null>(null)
   const [isSpecSubmitting, setIsSpecSubmitting] = useState(false)
   const [activeSpecRun, setActiveSpecRun] = useState<{ id: string; token: string } | null>(null)
@@ -86,11 +87,19 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId, getCanvasState }
 
   const fetchSpecs = useCallback(async () => {
     setIsLoadingSpecs(true)
+    setSpecsError(null)
     try {
       const res = await fetch(`/api/projects/${projectId}/specs`)
-      if (!res.ok) return
+      if (!res.ok) {
+        setSpecs([])
+        setSpecsError(`Failed to load specs (${res.status})`)
+        return
+      }
       const data = (await res.json()) as ProjectSpec[]
       setSpecs(data)
+    } catch {
+      setSpecs([])
+      setSpecsError("Network error — could not load specs")
     } finally {
       setIsLoadingSpecs(false)
     }
@@ -492,7 +501,19 @@ export function AiSidebar({ isOpen, onClose, projectId, roomId, getCanvasState }
                   </div>
                 )}
 
-                {!isLoadingSpecs && specs.length === 0 && (
+                {!isLoadingSpecs && specsError && (
+                  <div className="flex flex-col items-center gap-3 py-8 text-center">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-destructive/10">
+                      <AlertCircle className="h-5 w-5 text-destructive" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-copy-primary">Could not load specs</p>
+                      <p className="mt-0.5 text-xs text-copy-muted">{specsError}</p>
+                    </div>
+                  </div>
+                )}
+
+                {!isLoadingSpecs && !specsError && specs.length === 0 && (
                   <div className="flex flex-col items-center gap-3 py-8 text-center">
                     <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-ai/10">
                       <FileText className="h-5 w-5 text-ai-text" />
@@ -550,9 +571,17 @@ function SpecListItem({
   })
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
-      className="group flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-elevated"
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault()
+          onClick()
+        }
+      }}
+      className="group flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-2.5 text-left transition-colors hover:bg-elevated"
     >
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-ai/10">
         <FileText className="h-3.5 w-3.5 text-ai-text" />
@@ -568,7 +597,7 @@ function SpecListItem({
       >
         <Download className="h-3.5 w-3.5" />
       </button>
-    </button>
+    </div>
   )
 }
 
