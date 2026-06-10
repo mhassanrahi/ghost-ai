@@ -140,8 +140,13 @@ export const generateSpecTask = task({
         data: { id: specId, projectId, filePath: blob.url },
       })
     } catch (dbErr) {
-      await del(blob.url)
+      try {
+        await del(blob.url)
+      } catch (delErr) {
+        console.error("Failed to clean up blob after DB error:", delErr)
+      }
       throw dbErr
+    }
     }
 
     await metadata.set("status", "Complete")
