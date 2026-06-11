@@ -34,11 +34,16 @@ function createLiveblocksClient(): Liveblocks {
   })
 }
 
-const liveblocks: Liveblocks =
-  globalThis.liveblocks ?? createLiveblocksClient()
-
-if (process.env.NODE_ENV !== "production") {
-  globalThis.liveblocks = liveblocks
+function getLiveblocks(): Liveblocks {
+  if (!globalThis.liveblocks) {
+    globalThis.liveblocks = createLiveblocksClient()
+  }
+  return globalThis.liveblocks
 }
 
-export default liveblocks
+export { getLiveblocks }
+export default new Proxy({} as Liveblocks, {
+  get(_, prop) {
+    return getLiveblocks()[prop as keyof Liveblocks]
+  },
+})

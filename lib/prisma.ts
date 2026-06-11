@@ -24,10 +24,15 @@ function buildClient(): PrismaClient {
   return new PrismaClient({ adapter })
 }
 
-const prisma = globalThis.prisma ?? buildClient()
-
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma
+function getPrisma(): PrismaClient {
+  if (!globalThis.prisma) {
+    globalThis.prisma = buildClient()
+  }
+  return globalThis.prisma
 }
 
-export default prisma
+export default new Proxy({} as PrismaClient, {
+  get(_, prop) {
+    return getPrisma()[prop as keyof PrismaClient]
+  },
+})
