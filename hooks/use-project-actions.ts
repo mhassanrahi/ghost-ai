@@ -92,11 +92,8 @@ export function useProjectActions() {
       })
       if (!res.ok && res.status !== 204) throw new Error("Failed to delete project")
       closeDialog()
-      if (activeProjectId === selectedProject.id) {
-        router.push("/editor")
-      } else {
-        router.refresh()
-      }
+
+      router.push('/editor')
     } finally {
       setIsLoading(false)
     }
