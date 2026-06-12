@@ -34,12 +34,12 @@ Click [here](https://ghost-ai-de.vercel.app/) to see a live demo of the applicat
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     Next.js 16 (App Router)              │
+│                     Next.js 16 (App Router)             │
 │  ┌──────────────┐   ┌──────────────┐  ┌──────────────┐  │
 │  │  UI / Pages  │   │  API Routes  │  │   Server     │  │
 │  │  (React 19)  │   │  /app/api    │  │   Actions    │  │
 │  └──────┬───────┘   └──────┬───────┘  └──────┬───────┘  │
-└─────────┼──────────────────┼─────────────────┼───────────┘
+└─────────┼──────────────────┼─────────────────┼──────────┘
           │                  │                 │
           ▼                  ▼                 ▼
   ┌───────────────┐  ┌──────────────┐  ┌─────────────────┐
@@ -86,7 +86,7 @@ Click [here](https://ghost-ai-de.vercel.app/) to see a live demo of the applicat
 ### Prerequisites
 
 - **Node.js** `>= 20`
-- A **PostgreSQL** database (local or hosted, e.g. Neon, Supabase)
+- A **PostgreSQL** database
 - Accounts for: [Clerk](https://clerk.com), [Liveblocks](https://liveblocks.io), [Trigger.dev](https://trigger.dev), [Vercel Blob](https://vercel.com/docs/storage/vercel-blob), and an AI provider (Google Gemini or OpenAI)
 
 ### Installation
