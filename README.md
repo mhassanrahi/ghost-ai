@@ -1,12 +1,5 @@
 # Ghost AI
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
-![Liveblocks](https://img.shields.io/badge/Liveblocks-3-orange)
-![Trigger.dev](https://img.shields.io/badge/Trigger.dev-4-purple)
-![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma)
-![Clerk](https://img.shields.io/badge/Clerk-Auth-6C47FF?logo=clerk)
-
 **Ghost AI** is a real-time collaborative system design workspace. Describe a software architecture in plain English, let the AI generate it as an interactive graph on a shared canvas, refine it with your team, and export a production-ready technical specification — all without leaving your browser.
 
 ## Demo
